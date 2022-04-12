@@ -100,6 +100,15 @@ return(PREV_BLKP(bp));
 } 
 } 
 
+/*find first search*/
+static void *find_first_fit(size_t asize){
+    void *bp; 
+    for((bp = heap_listp); GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)){
+        if(!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp))))
+            return bp; /*first fit found*/
+    }
+    return NULL; /*no fit found*/
+}
 
 static void *extend_heap(size_t words){
     char *bp;
