@@ -77,8 +77,12 @@ static char *heap_listp;
 int mm_init(void)
 {
     if ((heap_listp = mem_sbrk(4*WSIZE)) == NULL)
-    return -1;
-    PUT(heap_listp, 0); PUT(heap_listp+WSIZE, PACK(DSIZE, 1)); PUT(heap_listp + DSIZE, PACK(DSIZE, 1)); PUT(heap_listp+WSIZE+DSIZE, PACK(0, 1)); heap_listp += DSIZE;
+        return -1;
+    PUT(heap_listp, 0); /*Alignment Padding*/
+    PUT(heap_listp+WSIZE, PACK(DSIZE, 1)); /*Prologue Header*/
+    PUT(heap_listp + DSIZE, PACK(DSIZE, 1));/*Prologue Footer*/
+    PUT(heap_listp+WSIZE+DSIZE, PACK(0, 1));/*Epliogue Header*/
+    heap_listp += DSIZE;
     /* Extend the empty heap with a free block */
     if (extend_heap(CHUNKSIZE/WSIZE) == NULL)
         return -1;
