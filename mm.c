@@ -70,6 +70,10 @@ team_t team = {
 #define NEXT_BLKP(bp)  ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE)))
 #define PREV_BLKP(bp)  ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))
 
+/*GLOBAL VARS*/
+static char *heap_listp;  /*pointer to the first block of the heap*/
+
+
 /* 
  * mm_init - initialize the malloc package.
  */
