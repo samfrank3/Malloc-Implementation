@@ -71,6 +71,17 @@ team_t team = {
 #define PREV_BLKP(bp)  ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))
 static char *heap_listp;
 
+
+/*find first search*/
+static void *find_first_fit(size_t asize){
+    void *bp; 
+    for((bp = heap_listp); GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)){
+        if(!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp))))
+            return bp; /*first fit found*/
+    }
+    return NULL; /*no fit found*/
+}
+
 static void *coalesce(void *bp){
     size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
     size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
@@ -98,17 +109,6 @@ static void *coalesce(void *bp){
         PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
         return(PREV_BLKP(bp));
     }
-}
-
-
-/*find first search*/
-static void *find_first_fit(size_t asize){
-    void *bp; 
-    for((bp = heap_listp); GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)){
-        if(!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp))))
-            return bp; /*first fit found*/
-    }
-    return NULL; /*no fit found*/
 }
 
 static void *extend_heap(size_t words){
@@ -153,15 +153,45 @@ int mm_init(void)
  *     Always allocate a block whose size is a multiple of the alignment.
  */
 void *mm_malloc(size_t size)
-{
-    int newsize = ALIGN(size + SIZE_T_SIZE);
-    void *p = mem_sbrk(newsize);
-    if (p == (void *)-1)
-    return NULL;
-    else {
-        *(size_t *)p = size;
-        return (void *)((char *)p + SIZE_T_SIZE);
+{ 
+    size_t asize;
+    size_t extendsize; 
+    char *bp;
+    
+    /*Ignore stupid calls*/
+    if(size == 0)
+        return NULL
+    
+    if(size <= DZIE){
+        asize = 2*DSIZE;
+    }else{
+        asize = DSIZE * ((size + (DSIZE) + (DSIZE - 1)) / DSIZE);
     }
+    
+    /*Search the free list for a fit*/
+    if((bp = find_first_fit(asize)) != NULL){
+        place(bp, asize);
+        return bp;
+    }
+    
+    /*No fit found*/
+    extendsize = MAX(asize, CHUNKSIZE);
+    if((bp = extend_heap(extendsize/WSIZE)) == NULL){
+        return NULL;
+    }
+    place(bp, asize);
+    return bp;
+    
+//     ORIGINAL MALLOC GIVEN WORKS 
+//     int newsize = ALIGN(size + SIZE_T_SIZE);
+//     void *p = mem_sbrk(newsize);
+//     if (p == (void *)-1)
+//     return NULL;
+//     else {
+//         *(size_t *)p = size;
+//         return (void *)((char *)p + SIZE_T_SIZE);
+//     }
+//     END OF ORIGINAL MALLOC GIVEN
 }
 
 /*
