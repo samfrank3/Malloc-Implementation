@@ -71,6 +71,39 @@ team_t team = {
 #define PREV_BLKP(bp)  ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))
 static char *heap_listp;
 
+static void *coalesce(void *bp){
+size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
+size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
+size_t size = GET_SIZE(HDRP(bp));
+15 
+	.	16  if (prev_alloc && next_alloc) {  
+	.	17  return bp;  
+	.	18  }  
+19 
+	.	20  else if (prev_alloc && !next_alloc) {  
+	.	21  size += GET_SIZE(HDRP(NEXT_BLKP(bp)));  
+	.	22  PUT(HDRP(bp), PACK(size, 0));  
+	.	23  PUT(FTRP(bp), PACK(size,0));  
+	.	24  return(bp);  
+	.	25  }  
+26 
+	.	27  else if (!prev_alloc && next_alloc) {  
+	.	28  size += GET_SIZE(HDRP(PREV_BLKP(bp)));  
+	.	29  PUT(FTRP(bp), PACK(size, 0));  
+	.	30  PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));  
+	.	31  return(PREV_BLKP(bp));  
+	.	32  }  
+33 
+	.	34  else { /* Case 4 */  
+	.	35  size += GET_SIZE(HDRP(PREV_BLKP(bp))) +  
+	.	36  GET_SIZE(FTRP(NEXT_BLKP(bp)));  
+	.	37  PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));  
+	.	38  PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));  
+	.	39  return(PREV_BLKP(bp));  
+	.	40  }  
+	.	41  }  
+
+
 static void *extend_heap(size_t words){
     char *bp;
     size_t size;
