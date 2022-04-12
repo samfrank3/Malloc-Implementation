@@ -76,6 +76,7 @@ static char *heap_listp;
  */
 int mm_init(void)
 {
+    /*Create the intial empty heap*/
     if ((heap_listp = mem_sbrk(4*WSIZE)) == NULL)
         return -1;
     PUT(heap_listp, 0); /*Alignment Padding*/
