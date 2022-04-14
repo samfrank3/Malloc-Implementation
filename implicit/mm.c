@@ -74,7 +74,7 @@ static char *heap_listp;
 
 /*find first search*/
 static void *find_first_fit(size_t asize){
-    void *bp; 
+    void *bp;
     for((bp = heap_listp); GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)){
         if(!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp))))
             return bp; /*first fit found*/
@@ -138,7 +138,7 @@ static void *extend_heap(size_t words){
     /*Initialize free block header/footer and the epilogue header*/
     PUT(HDRP(bp), PACK(size,0)); /*Free block header*/
     PUT(FTRP(bp), PACK(size,0)); /*Free block footer*/
-    PUT(HDRP(NEXT_BLK(bp)), PACK(0,1)); /*New epilogue header*/
+    PUT(HDRP(NEXT_BLKP(bp)), PACK(0,1)); /*New epilogue header*/
     
     /*Coalesce if the previous block was free*/
     return coalesce(bp);
@@ -168,16 +168,16 @@ int mm_init(void)
  *     Always allocate a block whose size is a multiple of the alignment.
  */
 void *mm_malloc(size_t size)
-{ 
+{
     size_t asize;
-    size_t extendsize; 
+    size_t extendsize;
     char *bp;
     
     /*Ignore stupid calls*/
     if(size == 0)
-        return NULL
+        return NULL;
     
-    if(size <= DZIE){
+    if(size <= DSIZE){
         asize = 2*DSIZE;
     }else{
         asize = DSIZE * ((size + (DSIZE) + (DSIZE - 1)) / DSIZE);
@@ -197,7 +197,7 @@ void *mm_malloc(size_t size)
     place(bp, asize);
     return bp;
     
-//     ORIGINAL MALLOC GIVEN WORKS 
+//     ORIGINAL MALLOC GIVEN WORKS
 //     int newsize = ALIGN(size + SIZE_T_SIZE);
 //     void *p = mem_sbrk(newsize);
 //     if (p == (void *)-1)
@@ -214,11 +214,11 @@ void *mm_malloc(size_t size)
  */
 void mm_free(void *ptr)
 {
-    size_t size = GET_SIZE(HDRP(bp));
+    size_t size = GET_SIZE(HDRP(ptr));
     
-    PUT(HDRP(bp), PACK(size, 0));
-    PUT(FTRP(bp), PACK(size, 0));
-    coalesce(bp);
+    PUT(HDRP(ptr), PACK(size, 0));
+    PUT(FTRP(ptr), PACK(size, 0));
+    coalesce(ptr);
 }
 
 /*
@@ -240,17 +240,4 @@ void *mm_realloc(void *ptr, size_t size)
     mm_free(oldptr);
     return newptr;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
