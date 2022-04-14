@@ -52,13 +52,16 @@ team_t team = {
 #define MAX(x, y) ((x) > (y)? (x) : (y))
 
 /* Pack a size and allocated bit into a word */
+/*pack creates the top and bottom of the block*/
 #define PACK(size, alloc)  ((size) | (alloc))
 
 /* Read and write a word at address p */
+/*Writing to a block*/
 #define GET(p)       (*(size_t *)(p))
 #define PUT(p, val)  (*(size_t *)(p) = (val))
 
 /* Read the size and allocated fields from address p */
+/*Read the size of a block*/
 #define GET_SIZE(p)  (GET(p) & ~0x7)
 #define GET_ALLOC(p) (GET(p) & 0x1)
 
