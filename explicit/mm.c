@@ -110,12 +110,12 @@ static void *coalesce(void *bp){
     size_t size = GET_SIZE(HDRP(bp));
 
     if (prev_alloc && next_alloc) {
-        //add bp to free list as well
+        free_add(bp);
         return bp;
     }
     else if (prev_alloc && !next_alloc) {
         size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
-        //delte NEXT_BLKP from the free list
+        free_delete(NEXT_BLKP(bp));
         PUT(HDRP(bp), PACK(size, 0));
         PUT(FTRP(bp), PACK(size,0));
         return(bp);
