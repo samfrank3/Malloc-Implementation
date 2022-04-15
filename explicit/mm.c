@@ -102,9 +102,9 @@ static void *find_first_fit(size_t asize){
    void *bp;
     for((bp = heap_listp); GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)){
         if(!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp))))
-            return bp; /*first fit found*/
+            return bp;
     }
-    return NULL; /*no fit found*/
+    return NULL;
    
    */
     
@@ -131,6 +131,7 @@ static void *coalesce(void *bp){
     else if (!prev_alloc && next_alloc) {
         size += GET_SIZE(HDRP(PREV_BLKP(bp)));
         //delte PREV_BLKP from the free list
+        free_delete(PREV_BLKP(bp));
         PUT(FTRP(bp), PACK(size, 0));
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
         return(PREV_BLKP(bp));
@@ -138,6 +139,8 @@ static void *coalesce(void *bp){
     else { /* Case 4 */
         size += GET_SIZE(HDRP(PREV_BLKP(bp))) + GET_SIZE(FTRP(NEXT_BLKP(bp)));
         //delte NEXT_BLKP from the free list
+        free_delete(NEXT_BLKP(bp));
+        free_delete(PREV_BLKP(bp));
         //delte PREV_BLKP from the free list
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
         PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
