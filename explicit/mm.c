@@ -100,7 +100,7 @@ static void *find_first_fit(size_t asize){
    
     
     
-    return NULL;*/ /*no fit found*/
+    return NULL; /*no fit found*/
 }
 
 static void *coalesce(void *bp){
