@@ -72,6 +72,94 @@ team_t team = {
 static char *heap_listp;
 static char *free_listp;
 
+static void free_add(void* newptr){
+    /*
+    new.next = free_listp;
+    current.prev = new.next 
+    new.prev = root/NULL
+    assign global pointer to new
+    */
+    
+    NEXT_PTR(newptr) = free_listp;
+    PREV_PTR(newptr) = NULL;
+    PREV_PTR(free_listp) = newptr;
+    free_listp = newptr;
+    
+}
+static void delete_add(void* current){
+    /*
+    if 
+    current is head, free_listp = current.next
+    current.next.previous = current.previous
+    else 
+    current.previous.next = current.next
+    current.next.previous = current.previous
+    */
+    if(PREV_PTR(current) == NULL){
+        free_listp = NEXT_PTR(current);
+        PREV_PTR(NEXT_PTR(current)) = PREV_PTR(current);
+    }else{
+        NEXT_PTR(PREV_PTR(current)) = NEXT_PTR(current);
+        PREV_PTR(NEXT_PTR(current)) = PREV_PTR(current);
+    }
+}
+
+
+static void *find_first_fit(size_t asize){
+    void *bp = free_listp;
+    while(GET_ALLOC(HDRP(bp)) != 0){
+        if(asize <= GET_SIZE(HDRP(bp))){
+            return bp;   
+        }
+        bp = NEXT_PTR(bp);
+    }
+    
+    return NULL;
+    
+    //if the while loop doesnt work, try this but I prefer to use the while loop. 
+    /*for(bp = free_listp; GET_ALLOC(HDRP(bp)) == 0); bp = NEXT_PTR(bp)){
+        if(asize <= GET_SIZE(HDRP(bp))){
+            return bp;   
+        }  
+    }
+    
+    
+    return NULL;*/ /*no fit found*/
+}
+
+static void *coalesce(void *bp){
+    size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
+    size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
+    size_t size = GET_SIZE(HDRP(bp));
+
+    if (prev_alloc && next_alloc) {
+        //add bp to free list as well
+        return bp;
+    }
+    else if (prev_alloc && !next_alloc) {
+        size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
+        //delte NEXT_BLKP from the free list
+        PUT(HDRP(bp), PACK(size, 0));
+        PUT(FTRP(bp), PACK(size,0));
+        return(bp);
+    }
+    else if (!prev_alloc && next_alloc) {
+        size += GET_SIZE(HDRP(PREV_BLKP(bp)));
+        //delte PREV_BLKP from the free list
+        PUT(FTRP(bp), PACK(size, 0));
+        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+        return(PREV_BLKP(bp));
+    }
+    else { /* Case 4 */
+        size += GET_SIZE(HDRP(PREV_BLKP(bp))) + GET_SIZE(FTRP(NEXT_BLKP(bp)));
+        //delte NEXT_BLKP from the free list
+        //delte PREV_BLKP from the free list
+        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+        PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
+        return(PREV_BLKP(bp));
+    }
+}
+
 /*
  * mm_init - initialize the malloc package.
  */
