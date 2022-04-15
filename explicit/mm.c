@@ -80,6 +80,7 @@ static void free_add(void* newptr){
     assign global pointer to new
     */
     
+    
 }
 static void delete_add(void* current){
     /*
@@ -169,6 +170,7 @@ void *mm_malloc(size_t size)
     if(size == 0){
         return NULL;   
     }
+    
     
     
     int newsize = ALIGN(size + SIZE_T_SIZE);
