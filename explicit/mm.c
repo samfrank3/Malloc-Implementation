@@ -69,6 +69,10 @@ team_t team = {
 /* Given block ptr bp, compute address of next and previous blocks */
 #define NEXT_BLKP(bp)  ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE)))
 #define PREV_BLKP(bp)  ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))
+/*Given block ptr bp, compute the address of the */
+#define GET_NEXT (*(char **)(bp));
+#define GET_PREV (*(char **)(bp + WSIZE));
+
 static char *heap_listp;
 static char *free_listp;
 
@@ -79,37 +83,52 @@ static void free_add(void* newptr){
     new.prev = root/NULL
     assign global pointer to new
     */
-    
-    
+    void* current = free_listp;
+    GET_NEXT(newptr) = current;
+    GET_PRV(newptr) = NULL;
+    GET_PREV(current) = GET_NEXT(newptr);
+    free_listp = newptr; 
 }
 static void delete_add(void* current){
     /*
-    if 
-    current is head, free_listp = current.next
+    if current is head, 
+    free_listp = current.next
     current.next.previous = current.previous
     else 
     current.previous.next = current.next
     current.next.previous = current.previous
     */
+    if(current == NULL){
+        free_listp = GET_NEXT(current);
+        GET_PREV(GET_NEXT(current)) = GET_PREV(current);
+    }else{
+        GET_NEXT(GET_PREV(current)) = GET_NEXT(current);
+        GET_PREV(GET_NEXT(current)) = GET_PREV(current);
+    }
 }
 
 
 static void *find_first_fit(size_t asize){
     void *bp = free_listp;
-    
-    
-   /*
-   void *bp;
-    for((bp = heap_listp); GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)){
-        if(!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp))))
+    while(GET_ALLOC(HDRP(bp)) != 0){
+        if(asize <= GET_SIZE(HDRP(bp))){
             return bp;
+        }
     }
-    return NULL;
-   
-   */
-    
     
     return NULL; /*no fit found*/
+    
+    
+    //or
+    /*
+    for (bp = free_listp; GET_ALLOC(HDRP(bp)) == 0; bp = NEXT_PTR(bp)) {
+		if (asize <= GET_SIZE(HDRP(bp))){ //block of required size is found
+			return (bp);
+        }
+	}
+    
+    return NULL;
+    */
 }
 
 static void *coalesce(void *bp){
