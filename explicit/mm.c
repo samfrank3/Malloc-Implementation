@@ -80,11 +80,6 @@ static void free_add(void* newptr){
     assign global pointer to new
     */
     
-    NEXT_PTR(newptr) = free_listp;
-    PREV_PTR(newptr) = NULL;
-    PREV_PTR(free_listp) = newptr;
-    free_listp = newptr;
-    
 }
 static void delete_add(void* current){
     /*
@@ -95,33 +90,14 @@ static void delete_add(void* current){
     current.previous.next = current.next
     current.next.previous = current.previous
     */
-    if(PREV_PTR(current) == NULL){
-        free_listp = NEXT_PTR(current);
-        PREV_PTR(NEXT_PTR(current)) = PREV_PTR(current);
-    }else{
-        NEXT_PTR(PREV_PTR(current)) = NEXT_PTR(current);
-        PREV_PTR(NEXT_PTR(current)) = PREV_PTR(current);
-    }
 }
 
 
 static void *find_first_fit(size_t asize){
     void *bp = free_listp;
-    while(GET_ALLOC(HDRP(bp)) != 0){
-        if(asize <= GET_SIZE(HDRP(bp))){
-            return bp;   
-        }
-        bp = NEXT_PTR(bp);
-    }
     
-    return NULL;
     
-    //if the while loop doesnt work, try this but I prefer to use the while loop. 
-    /*for(bp = free_listp; GET_ALLOC(HDRP(bp)) == 0); bp = NEXT_PTR(bp)){
-        if(asize <= GET_SIZE(HDRP(bp))){
-            return bp;   
-        }  
-    }
+   
     
     
     return NULL;*/ /*no fit found*/
