@@ -70,6 +70,7 @@ team_t team = {
 #define NEXT_BLKP(bp)  ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE)))
 #define PREV_BLKP(bp)  ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))
 static char *heap_listp;
+static char *free_listp;
 
 /*
  * mm_init - initialize the malloc package.
@@ -77,8 +78,14 @@ static char *heap_listp;
 int mm_init(void)
 {
     if ((heap_listp = mem_sbrk(4*WSIZE)) == NULL)
-    return -1;
-    PUT(heap_listp, 0); PUT(heap_listp+WSIZE, PACK(DSIZE, 1)); PUT(heap_listp + DSIZE, PACK(DSIZE, 1)); PUT(heap_listp+WSIZE+DSIZE, PACK(0, 1)); heap_listp += DSIZE;
+        return -1;
+    PUT(heap_listp, 0); 
+    PUT(heap_listp+WSIZE, PACK(DSIZE, 1)); 
+    PUT(heap_listp + DSIZE, PACK(DSIZE, 1)); 
+    PUT(heap_listp+WSIZE+DSIZE, PACK(0, 1)); 
+    heap_listp += DSIZE;
+    
+    free_listp = heap_listp;
     /* Extend the empty heap with a free block */
     if (extend_heap(CHUNKSIZE/WSIZE) == NULL)
         return -1;
@@ -91,6 +98,15 @@ int mm_init(void)
  */
 void *mm_malloc(size_t size)
 {
+    void *bp; 
+    size_t asize; 
+    size_t extendsize; 
+    
+    if(size == 0){
+        return NULL;   
+    }
+    
+    
     int newsize = ALIGN(size + SIZE_T_SIZE);
     void *p = mem_sbrk(newsize);
     if (p == (void *)-1)
