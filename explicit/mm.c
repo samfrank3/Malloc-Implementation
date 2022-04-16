@@ -141,24 +141,25 @@ static void fill_block(void* current){
 
 
 static void *find_first_fit(size_t asize){
-    for(void *bp = free_listp; GET_ALLOC(HDRP(bp)) == 0; bp = (*(char **)(bp))){
-        if(asize <= GET_SIZE(HDRP(bp))){
-            return bp;
-        }
-    }
+//     for(void *bp = free_listp; GET_ALLOC(HDRP(bp)) == 0; bp = (*(char **)(bp))){
+//         if(asize <= GET_SIZE(HDRP(bp))){
+//             return bp;
+//         }
+//     }
     
-    return NULL;
+//     return NULL;
     
-    /*void *bp = free_listp;
+    
+    void *bp = free_listp;
     while(GET_ALLOC(HDRP(bp)) != 0){
         if(asize <= GET_SIZE(HDRP(bp))){
             return bp;
         }
         bp = GET_NEXT(free_listp);
     }
-    */
+   
     
-//    return NULL; /*no fit found*/
+   return NULL; /*no fit found*/
     
     
     //or
