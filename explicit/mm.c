@@ -214,24 +214,23 @@ void *mm_malloc(size_t size)
     size_t extendsize; /* Amount to extend heap if no fit */
     void *bp;
 
-    /* Ignore spurious requests. */
+    /* Ignore stupid calls. */
     if (size == 0)
         return NULL;
 
-    /* Adjust block size to include overhead and alignment reqs. */
     if (size <= DSIZE){
         asize = 2 * DSIZE;
     }else{
         asize = DSIZE * ((size + DSIZE + (DSIZE - 1)) / DSIZE);
     }
 
-    /* Search the free list for a fit. */
+    /* Search the free list for a fit*/
     if ((bp = find_first_fit(asize)) != NULL) {
         place(bp, asize);
         return bp;
     }
 
-    /* No fit found.  Get more memory and place the block. */
+    /* No fit found*/
     extendsize = MAX(asize, CHUNKSIZE);
     if ((bp = extend_heap(extendsize / WSIZE)) == NULL){
         return NULL;
@@ -296,15 +295,15 @@ void *mm_realloc(void *ptr, size_t size)
         return (mm_malloc(size));
 
     oldsize=GET_SIZE(HDRP(ptr));
-    newsize = size + (2 * WSIZE);                    // newsize after adding header and footer to asked size
+    newsize = size + (2 * WSIZE);                  
 
     if (newsize <= oldsize){
         return ptr;
     }
     else{
-        size_t if_next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));        //check if next block is allocated
-        size_t next_blk_size = GET_SIZE(HDRP(NEXT_BLKP(ptr)));        //size of next block
-        size_t total_free_size = oldsize + next_blk_size;            //total free size of current and next block
+        size_t if_next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));        
+        size_t next_blk_size = GET_SIZE(HDRP(NEXT_BLKP(ptr)));        
+        size_t total_free_size = oldsize + next_blk_size;          
 
         if(!if_next_alloc && total_free_size>= newsize){
             fill_block(NEXT_BLKP(ptr));
