@@ -70,11 +70,11 @@ team_t team = {
 #define NEXT_BLKP(bp)  ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE)))
 #define PREV_BLKP(bp)  ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))
 /*Given block ptr bp, compute the address of the */
-#define GET_NEXT(bp) (*(char **)(bp));
-#define GET_PREV(bp) (*(char **)(bp + WSIZE));
+#define GET_NEXT(bp) (*(char **)(bp))
+#define GET_PREV(bp) (*(char **)(bp + WSIZE))
 
-#define SET_NEXT(bp, val) (*(char **)(bp) = (val));
-#define SET_PREV(bp, val) (*(char **)(bp + WSIZE) = (val));
+#define SET_NEXT(bp, val) (*(char **)(bp) = (val))
+#define SET_PREV(bp, val) (*(char **)(bp + WSIZE) = (val))
 
 
 static char* heap_listp;
@@ -117,14 +117,17 @@ static void fill_block(void* current){
     GET_PREV = (*(char **)(bp + WSIZE))
     */
     if((*(char **)(current + WSIZE)) == NULL){ //if current is the head
-        free_listp = (*(char **)(current));
-        (*(char **)(free_listp + WSIZE)) = NULL;
+        free_listp = GET_NEXT(current);
+        GET_PREV(GET_NEXT) = GET_PREV(current);
+//         free_listp = (*(char **)(current));
+//         (*(char **)(free_listp + WSIZE)) = NULL;
     }else{
         //current.previous.next = current.next <==> NEXT(PREV) = NEXT
         //current.next.previous = current.previous <==> PREV(NEXT) = PREV
-        
-        (*(char **)((*(char **)(current + WSIZE)))) = (*(char **)(current));
-        (*(char **)((*(char **)(current)) + WSIZE)) = (*(char **)(current + WSIZE));
+        GET_NEXT(GET_PREV(current)) = GET_NEXT(current);
+        GET_PREV(GET_NEXT(current)) = GET_PREV(current);
+//         (*(char **)((*(char **)(current + WSIZE)))) = (*(char **)(current));
+//         (*(char **)((*(char **)(current)) + WSIZE)) = (*(char **)(current + WSIZE));
     }
     
 //     if(current == NULL){
@@ -149,17 +152,26 @@ static void *find_first_fit(size_t asize){
     
 //     return NULL;
     
-    
-    void *bp = free_listp;
-    while(GET_ALLOC(HDRP(bp)) != 0){
+    void *bp; 
+    for(bp = free_listp; GET_ALLOC(HDRP(bp)) == 0; bp = (*(char **)(bp))){
         if(asize <= GET_SIZE(HDRP(bp))){
             return bp;
         }
-        bp = GET_NEXT(free_listp);
     }
+    
+    return NULL;
+    
+    
+//     void *bp = free_listp;
+//     while(GET_ALLOC(HDRP(bp)) != 0){
+//         if(asize <= GET_SIZE(HDRP(bp))){
+//             return bp;
+//         }
+//         bp = GET_NEXT(free_listp);
+//     }
    
     
-   return NULL; /*no fit found*/
+//    return NULL; /*no fit found*/
     
     
     //or
