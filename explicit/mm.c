@@ -88,16 +88,18 @@ static void free_add(void* new){
     assign global pointer to new
     */
     /*
+    GET_NEXT = (*(char **)(bp))
+    GET_PREV = (*(char **)(bp + WSIZE))
     GET_NEXT(new) = free_listp;
     GET_PREV(new) = NULL;
     GET_PREV(free_listp) = GET_NEXT(new);
     free_listp = new;
     */
     
-    SET_NEXT(new, free_listp);
-    SET_PREV(free_listp, new);
-    SET_PREV(new, NULL);
-    free_listp = new;
+    (*(char **)(new)) = free_listp; //set new next point to free_listp
+    (*(char **)(freelist_p + WSIZE)) = new; //set free_listp prev to new
+    (*(char **)(new + WSIZE)) = NULL; //set new prev to NULL (make it the head) 
+    free_listp = new; //assign the pointer of the list to the new head. 
     
     
 }
