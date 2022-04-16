@@ -36,7 +36,7 @@ team_t team = {
 };
 
 /* single word (4) or double word (8) alignment */
-#define ALIGNMENT 8
+#define ALIGNMENT DSIZE
 
 /* rounds up to the nearest multiple of ALIGNMENT */
 #define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~0x7)
@@ -62,7 +62,7 @@ team_t team = {
 
 /* Read the size and allocated fields from address p */
 /*Read the size of a block*/
-#define GET_SIZE(p)  (GET(p) & ~0x7)
+#define GET_SIZE(p)  (GET(p) & ~(DSIZE -1))
 #define GET_ALLOC(p) (GET(p) & 0x1)
 
 /* Given block ptr bp, compute address of its header and footer */
@@ -70,8 +70,8 @@ team_t team = {
 #define FTRP(bp)       ((char *)(bp) + GET_SIZE(HDRP(bp)) - DSIZE)
 
 /* Given block ptr bp, compute address of next and previous blocks */
-#define NEXT_BLKP(bp)  ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE)))
-#define PREV_BLKP(bp)  ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))
+#define NEXT_BLKP(bp)  ((void *)(bp) + GET_SIZE(HDRP(bp)))
+#define PREV_BLKP(bp)  ((void *)(bp) - GET_SIZE((void *)(bp) - DSIZE))
 
 #define GET_NEXT(p)  (*(char **)(p + WSIZE))
 #define GET_PREV(p)  (*(char **)(p))
@@ -127,6 +127,7 @@ static void *coalesce(void *bp){
         fill_block(PREV_BLKP(bp));
         PUT(FTRP(bp), PACK(size, 0));
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+        bp = PREV_BLKP(bp);
     }
     else { /* Case 4 */
         size += GET_SIZE(HDRP(PREV_BLKP(bp))) + GET_SIZE(FTRP(NEXT_BLKP(bp)));
@@ -253,15 +254,15 @@ void *mm_malloc(size_t size)
 /*
  * mm_free - Freeing a block does nothing.
  */
-void mm_free(void *bp)
+void mm_free(void *ptr)
 {
-    if (bp == NULL)
+    if (ptr == NULL)
         return;
     
-    size_t size = GET_SIZE(HDRP(bp));
-    PUT(HDRP(bp), PACK(size, 0));
-    PUT(FTRP(bp), PACK(size, 0));
-    coalesce(bp);
+    size_t size = GET_SIZE(HDRP(ptr));
+    PUT(HDRP(ptr), PACK(size, 0));
+    PUT(FTRP(ptr), PACK(size, 0));
+    coalesce(ptr);
 }
 
 /*
@@ -269,18 +270,59 @@ void mm_free(void *bp)
  */
 void *mm_realloc(void *ptr, size_t size)
 {
-    void *oldptr = ptr;
-    void *newptr;
-    size_t copySize;
+//    void *oldptr = ptr;
+//    void *newptr;
+//    size_t copySize;
+//
+//    newptr = mm_malloc(size);
+//    if (newptr == NULL)
+//      return NULL;
+//    copySize = *(size_t *)((char *)oldptr - SIZE_T_SIZE);
+//    if (size < copySize)
+//      copySize = size;
+//    memcpy(newptr, oldptr, copySize);
+//    mm_free(oldptr);
+//    return newptr;
     
-    newptr = mm_malloc(size);
-    if (newptr == NULL)
-      return NULL;
-    copySize = *(size_t *)((char *)oldptr - SIZE_T_SIZE);
-    if (size < copySize)
-      copySize = size;
-    memcpy(newptr, oldptr, copySize);
-    mm_free(oldptr);
-    return newptr;
+    size_t oldsize,newsize;
+    void *newptr;
+    if((int)size < 0)
+        return NULL;
+    if (size == 0) {
+        mm_free(ptr);
+        return (NULL);
+    }
+    if (ptr == NULL)
+        return (mm_malloc(size));
+
+    oldsize=GET_SIZE(HDRP(ptr));
+    newsize = size + (2 * WSIZE);                    // newsize after adding header and footer to asked size
+
+    if (newsize <= oldsize){
+        return ptr;
+    }
+    else{
+        size_t if_next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));        //check if next block is allocated
+        size_t next_blk_size = GET_SIZE(HDRP(NEXT_BLKP(ptr)));        //size of next block
+        size_t total_free_size = oldsize + next_blk_size;            //total free size of current and next block
+
+        if(!if_next_alloc && total_free_size>= newsize){
+            fill_block(NEXT_BLKP(ptr));
+            PUT(HDRP(ptr),PACK(total_free_size,1));
+            PUT(FTRP(ptr),PACK(total_free_size,1));
+            return ptr;
+        }
+        
+        else{
+            newptr=mm_malloc(newsize);
+                
+            if (newptr == NULL)
+                return (NULL);
+            place(newptr,newsize);
+            memcpy(newptr,ptr,oldsize);
+            mm_free(ptr);
+            return newptr;
+        }
+    }
 }
 
