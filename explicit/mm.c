@@ -126,16 +126,24 @@ static void fill_block(void* current){
 
 
 static void *find_first_fit(size_t asize){
-    void *bp = free_listp;
+    for(void *bp = free_listp; GET_ALLOC(HDRP(bp)) == 0; bp = (*(char **)(bp))){
+        if(asize <= GET_SIZE(HDRP(bp))){
+            return bp;
+        }
+    }
+    
+    return NULL;
+    
+    /*void *bp = free_listp;
     while(GET_ALLOC(HDRP(bp)) != 0){
         if(asize <= GET_SIZE(HDRP(bp))){
             return bp;
         }
         bp = GET_NEXT(free_listp);
     }
+    */
     
-    
-    return NULL; /*no fit found*/
+//    return NULL; /*no fit found*/
     
     
     //or
@@ -149,24 +157,6 @@ static void *find_first_fit(size_t asize){
     return NULL;
     */
 }
-
-static void place(void *bp, size_t asize){
-    size_t csize = GET_SIZE(HDRP(bp));
-    if((csize - asize) >= (2*DSIZE)){
-        PUT(HDRP(bp), PACK(asize, 1));
-        PUT(FTRP(bp), PACK(asize, 1));
-        fill_block(bp);
-        bp = NEXT_BLKP(bp);
-        PUT(HDRP(bp), PACK(csize-asize, 0));
-        PUT(FTRP(bp), PACK(csize-asize, 0));
-        coalesce(bp);
-    }else{
-        PUT(HDRP(bp), PACK(csize, 1));
-        PUT(FTRP(bp), PACK(csize, 1));
-        fillblock(bp);
-    }
-}
-
 
 static void *coalesce(void *bp){
     size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
@@ -198,6 +188,23 @@ static void *coalesce(void *bp){
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
         PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
         return(PREV_BLKP(bp));
+    }
+}
+
+static void place(void *bp, size_t asize){
+    size_t csize = GET_SIZE(HDRP(bp));
+    if((csize - asize) >= (2*DSIZE)){
+        PUT(HDRP(bp), PACK(asize, 1));
+        PUT(FTRP(bp), PACK(asize, 1));
+        fill_block(bp);
+        bp = NEXT_BLKP(bp);
+        PUT(HDRP(bp), PACK(csize-asize, 0));
+        PUT(FTRP(bp), PACK(csize-asize, 0));
+        coalesce(bp);
+    }else{
+        PUT(HDRP(bp), PACK(csize, 1));
+        PUT(FTRP(bp), PACK(csize, 1));
+        fill_block(bp);
     }
 }
 
