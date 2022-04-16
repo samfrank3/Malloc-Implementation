@@ -60,29 +60,15 @@ team_t team = {
 #define FTRP(bp)  ((char *)(bp) + GET_SIZE(HDRP(bp)) - DSIZE)
 
 /* Given block ptr bp, compute address of next and previous blocks. */
-//#define NEXT_BLKP(bp)  ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE)))
 #define NEXT_BLKP(bp)  ((void *)(bp) + GET_SIZE(HDRP(bp)))
-//#define PREV_BLKP(bp)  ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))
 #define PREV_BLKP(bp) ((void *)(bp) - GET_SIZE((void *)(bp) - DSIZE))
+
+#define NEXT_PTR(p)  (*(char **)(p + WSIZE))
+#define PREV_PTR(p)  (*(char **)(p))
+
 
 /* Global variables: */
 static char *heap_listp=0; /* Pointer to first block */
-
-/* Function prototypes for internal helper routines: */
-static void *coalesce(void *bp);
-static void *extend_heap(size_t words);
-static void *find_fit(size_t asize);
-static void place(void *bp, size_t asize);
-
-/* Function prototypes for heap consistency checker routines: */
-//static void checkblock(void *bp);
-//static void checkheap(bool verbose);
-//static void printblock(void *bp);
-
-/*myMacros */
-/*Pointer to get NEXT and PREVIOUS pointer of free_list*/
-#define NEXT_PTR(p)  (*(char **)(p + WSIZE))
-#define PREV_PTR(p)  (*(char **)(p))
 
 
 /* myVariables */
