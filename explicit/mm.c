@@ -71,10 +71,10 @@ team_t team = {
 #define PREV_BLKP(bp)  ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))
 /*Given block ptr bp, compute the address of the */
 #define GET_NEXT(bp) (*(char **)(bp))
-#define GET_PREV(bp) (*(char **)(bp + WSIZE))
+#define GET_PREV(bp) (*(char **)(bp + DSIZE))
 
 #define SET_NEXT(bp, val) (*(char **)(bp) = (val))
-#define SET_PREV(bp, val) (*(char **)(bp + WSIZE) = (val))
+#define SET_PREV(bp, val) (*(char **)(bp + DSIZE) = (val))
 
 
 static char* heap_listp;
@@ -97,9 +97,9 @@ static void free_add(void* new){
     */
     
     (*(char **)(new)) = free_listp; //set new next point to free_listp
-    (*(char **)(freelist_p + WSIZE)) = new; //set free_listp prev to new
-    (*(char **)(new + WSIZE)) = NULL; //set new prev to NULL (make it the head) 
-    free_listp = new; //assign the pointer of the list to the new head. 
+    (*(char **)(free_listp + WSIZE)) = new; //set free_listp prev to new
+    (*(char **)(new + WSIZE)) = NULL; //set new prev to NULL (make it the head)
+    free_listp = new; //assign the pointer of the list to the new head.
     
     
 }
@@ -118,7 +118,7 @@ static void fill_block(void* current){
     */
     if((*(char **)(current + WSIZE)) == NULL){ //if current is the head
         free_listp = GET_NEXT(current);
-        GET_PREV(GET_NEXT) = GET_PREV(current);
+        GET_PREV(GET_NEXT(current)) = GET_PREV(current);
 //         free_listp = (*(char **)(current));
 //         (*(char **)(free_listp + WSIZE)) = NULL;
     }else{
@@ -152,7 +152,7 @@ static void *find_first_fit(size_t asize){
     
 //     return NULL;
     
-    void *bp; 
+    void *bp;
     for(bp = free_listp; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)){
         if(asize <= GET_SIZE(HDRP(bp))){
             return bp;
