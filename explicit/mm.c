@@ -15,7 +15,6 @@
 #include <assert.h>
 #include <unistd.h>
 #include <string.h>
-#include <stdbool.h>
 
 #include "mm.h"
 #include "memlib.h"
@@ -295,8 +294,8 @@ mm_realloc(void *ptr, size_t size)
 static void *
 coalesce(void *bp)
 {
-    bool prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp))) || PREV_BLKP(bp) == bp ; // prev_alloc will be true if previous block is allocated or its size is zero
-    bool next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
+    size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp))) || PREV_BLKP(bp) == bp ; // prev_alloc will be true if previous block is allocated or its size is zero
+    size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
     size_t size = GET_SIZE(HDRP(bp));
 
     if (prev_alloc && next_alloc) {                 /* Case 1 */
