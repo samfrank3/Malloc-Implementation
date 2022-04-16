@@ -113,17 +113,30 @@ static void fill_block(void* current){
     else
     current.previous.next = current.next
     current.next.previous = current.previous
+    GET_NEXT = (*(char **)(bp))
+    GET_PREV = (*(char **)(bp + WSIZE))
     */
-    if(current == NULL){
-        free_listp = GET_NEXT(current);
-        SET_PREV(free_listp, NULL);
-        
+    if((*(char **)(current + WSIZE)) == NULL){ //if current is the head
+        free_listp = (*(char **)(current));
+        (*(char **)(free_listp + WSIZE)) = NULL;
     }else{
-        void *prev = GET_PREV(current);
-        void *next = GET_NEXT(current);
-        SET_NEXT(prev, next);
-        SET_PREV(next, prev);
+        //current.previous.next = current.next <==> NEXT(PREV) = NEXT
+        //current.next.previous = current.previous <==> PREV(NEXT) = PREV
+        
+        (*(char **)((*(char **)(current + WSIZE)))) = (*(char **)(current));
+        (*(char **)((*(char **)(current)) + WSIZE)) = (*(char **)(current + WSIZE));
     }
+    
+//     if(current == NULL){
+//         free_listp = GET_NEXT(current);
+//         SET_PREV(free_listp, NULL);
+        
+//     }else{
+//         void *prev = GET_PREV(current);
+//         void *next = GET_NEXT(current);
+//         SET_NEXT(prev, next);
+//         SET_PREV(next, prev);
+//     }
 }
 
 
