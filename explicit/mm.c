@@ -73,8 +73,8 @@ team_t team = {
 #define NEXT_BLKP(bp)  ((void *)(bp) + GET_SIZE(HDRP(bp)))
 #define PREV_BLKP(bp)  ((void *)(bp) - GET_SIZE((void *)(bp) - DSIZE))
 
-#define GET_NEXT(p)  (*(char **)(p + WSIZE))
-#define GET_PREV(p)  (*(char **)(p))
+#define GET_NEXT(p)  (*(char **)(p))
+#define GET_PREV(p)  (*(char **)(p + WSIZE))
 
 static char *heap_listp;
 static char* free_listp;
