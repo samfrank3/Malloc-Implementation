@@ -153,7 +153,7 @@ static void *find_first_fit(size_t asize){
 //     return NULL;
     
     void *bp; 
-    for(bp = free_listp; GET_ALLOC(HDRP(bp)) == 0; bp = (*(char **)(bp))){
+    for(bp = free_listp; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)){
         if(asize <= GET_SIZE(HDRP(bp))){
             return bp;
         }
