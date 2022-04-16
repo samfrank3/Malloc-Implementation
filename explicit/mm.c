@@ -86,7 +86,7 @@ static void place(void *bp, size_t asize);
 
 /* myVariables */
 // Pointer pointing to starting of explicit free list
-static char* freeListPtr=0;
+static char* free_listp=0;
 
 /* myMethods */
 // Function prototypes for next_fit and best_fit
@@ -119,8 +119,8 @@ mm_init(void)
     PUT(heap_listp + (3 * WSIZE), PACK(0, 1));     /* Epilogue header */
     heap_listp += (2 * WSIZE);
     
-    // Initialize freeListPtr to point to starting of free memory in heap
-    freeListPtr=heap_listp;
+    // Initialize free_listp to point to starting of free memory in heap
+    free_listp=heap_listp;
 
     /* Extend the empty heap with a free block of CHUNKSIZE bytes. */
     if (extend_heap(CHUNKSIZE / WSIZE) == NULL)
@@ -323,8 +323,8 @@ coalesce(void *bp)
     free_list_add(bp);                                // add newly coalesced block to free_list
 
     // only for best_fit and next_fit
-    /*if ((freeListPtr > (char *)bp) && (freeListPtr < NEXT_BLKP(bp)))
-        freeListPtr = bp;*/
+    /*if ((free_listp > (char *)bp) && (free_listp < NEXT_BLKP(bp)))
+        free_listp = bp;*/
     return (bp);
 }
 
@@ -371,7 +371,7 @@ find_fit(size_t asize)
 
     /* Search for the first fit. */
     // traversing through the free_list until free block is found
-    for (bp = freeListPtr; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+    for (bp = free_listp; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
         if (asize <= GET_SIZE(HDRP(bp)))    //block of required size is found
             return (bp);
     }
@@ -391,13 +391,13 @@ find_fit(size_t asize)
 
 /*static void *next_fit(size_t asize)
 {
-    char *temp=freeListPtr;
-    for(;GET_SIZE(HDRP(freeListPtr)) > 0;freeListPtr=NEXT_BLKP(freeListPtr))
-        if (!GET_ALLOC(HDRP(freeListPtr)) && asize <= GET_SIZE(HDRP(freeListPtr)))
-            return freeListPtr;
-    for(freeListPtr=heap_listp;freeListPtr<temp;freeListPtr=NEXT_BLKP(freeListPtr))
-        if (!GET_ALLOC(HDRP(freeListPtr)) && asize <= GET_SIZE(HDRP(freeListPtr)))
-            return freeListPtr;
+    char *temp=free_listp;
+    for(;GET_SIZE(HDRP(free_listp)) > 0;free_listp=NEXT_BLKP(free_listp))
+        if (!GET_ALLOC(HDRP(free_listp)) && asize <= GET_SIZE(HDRP(free_listp)))
+            return free_listp;
+    for(free_listp=heap_listp;free_listp<temp;free_listp=NEXT_BLKP(free_listp))
+        if (!GET_ALLOC(HDRP(free_listp)) && asize <= GET_SIZE(HDRP(free_listp)))
+            return free_listp;
     return NULL;
 }*/
 
@@ -413,7 +413,7 @@ find_fit(size_t asize)
             if(flag==0)
             {
                 min=GET_SIZE(HDRP(bp));
-                freeListPtr=bp;
+                free_listp=bp;
                 flag=1;
             }
             else
@@ -421,13 +421,13 @@ find_fit(size_t asize)
                 if(GET_SIZE(HDRP(bp))<min)
                 {
                     min=GET_SIZE(HDRP(bp));
-                    freeListPtr=bp;
+                    free_listp=bp;
                 }
             }
         }
     }
     if(flag==1)
-        return freeListPtr;
+        return free_listp;
     return NULL;
 }*/
 
@@ -482,7 +482,7 @@ place(void *bp, size_t asize)
 //void
 //checkheap(bool verbose)
 //{
-//    void*bp=freeListPtr;
+//    void*bp=free_listp;
 //        while (GET_NEXT(bp)!=NULL) {
 //            //checks if blocks in free_list are actually free
 //            if (GET_ALLOC(HDRP(bp)) == 1 || GET_ALLOC(FTRP(bp)) == 1){
@@ -545,16 +545,16 @@ place(void *bp, size_t asize)
 /* myMethods */
 // adds free block pointed by ptr to the free_list
 static void free_list_add(void* ptr){
-    GET_NEXT(ptr)=freeListPtr;
-    GET_PREV(freeListPtr)=ptr;
+    GET_NEXT(ptr)=free_listp;
+    GET_PREV(free_listp)=ptr;
     GET_PREV(ptr)=NULL;
-    freeListPtr=ptr;
+    free_listp=ptr;
 }
 
 // deletes free block pointed by ptr to the free_list
 static void free_list_delete(void* ptr){
     if(GET_PREV(ptr)==NULL)                        //if ptr points to root of free_list
-        freeListPtr=GET_NEXT(ptr);
+        free_listp=GET_NEXT(ptr);
     else                                        //if ptr points to any arbitary block in free_list
         GET_NEXT(GET_PREV(ptr))=GET_NEXT(ptr);
     GET_PREV(GET_NEXT(ptr))=GET_PREV(ptr);
