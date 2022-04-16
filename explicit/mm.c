@@ -81,8 +81,8 @@ static void place(void *bp, size_t asize);
 
 /*myMacros */
 /*Pointer to get NEXT and PREVIOUS pointer of free_list*/
-#define NEXT_PTR(p)  (*(char **)(p + WSIZE))
-#define PREV_PTR(p)  (*(char **)(p))
+#define GET_NEXT(p)  (*(char **)(p + WSIZE))
+#define GET_PREV(p)  (*(char **)(p))
 
 
 /* myVariables */
@@ -372,7 +372,7 @@ find_fit(size_t asize)
 
     /* Search for the first fit. */
     // traversing through the free_list until free block is found
-    for (bp = freeListPtr; GET_ALLOC(HDRP(bp)) == 0; bp = NEXT_PTR(bp)) {
+    for (bp = freeListPtr; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
         if (asize <= GET_SIZE(HDRP(bp)))    //block of required size is found
             return (bp);
     }
@@ -484,13 +484,13 @@ place(void *bp, size_t asize)
 //checkheap(bool verbose)
 //{
 //    void*bp=freeListPtr;
-//        while (NEXT_PTR(bp)!=NULL) {
+//        while (GET_NEXT(bp)!=NULL) {
 //            //checks if blocks in free_list are actually free
 //            if (GET_ALLOC(HDRP(bp)) == 1 || GET_ALLOC(FTRP(bp)) == 1){
 //                    printf("Encountered an allocated block in free list\n");
 //                    return;
 //            }
-//            bp  = NEXT_PTR(bp);
+//            bp  = GET_NEXT(bp);
 //        }
 //
 //    if (verbose)
@@ -546,18 +546,18 @@ place(void *bp, size_t asize)
 /* myMethods */
 // adds free block pointed by ptr to the free_list
 static void free_list_add(void* ptr){
-    NEXT_PTR(ptr)=freeListPtr;
-    PREV_PTR(freeListPtr)=ptr;
-    PREV_PTR(ptr)=NULL;
+    GET_NEXT(ptr)=freeListPtr;
+    GET_PREV(freeListPtr)=ptr;
+    GET_PREV(ptr)=NULL;
     freeListPtr=ptr;
 }
 
 // deletes free block pointed by ptr to the free_list
 static void free_list_delete(void* ptr){
-    if(PREV_PTR(ptr)==NULL)                        //if ptr points to root of free_list
-        freeListPtr=NEXT_PTR(ptr);
+    if(GET_PREV(ptr)==NULL)                        //if ptr points to root of free_list
+        freeListPtr=GET_NEXT(ptr);
     else                                        //if ptr points to any arbitary block in free_list
-        NEXT_PTR(PREV_PTR(ptr))=NEXT_PTR(ptr);
-    PREV_PTR(NEXT_PTR(ptr))=PREV_PTR(ptr);
+        GET_NEXT(GET_PREV(ptr))=GET_NEXT(ptr);
+    GET_PREV(GET_NEXT(ptr))=GET_PREV(ptr);
 }
 
