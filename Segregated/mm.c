@@ -77,16 +77,17 @@ team_t team = {
 #define GET_PREV(p)  (*(char **)(p + WSIZE))
 
 static char *heap_listp;
-static char* free_listp1_2;
-static char* free_listp3_4;
-static char* free_listp5_8;
-static char* free_listp9_16;
-static char* free_listp17_32;
-static char* free_listp33_inf;
+static char  *free_listp;
+// static char* free_listp1_2;
+// static char* free_listp3_4;
+// static char* free_listp5_8;
+// static char* free_listp9_16;
+// static char* free_listp17_32;
+// static char* free_listp33_inf;
 
 
 static void add_to_list(void* new, size_t size){
-    if (size <= 2) {
+    /*if (size <= 2) {
         GET_NEXT(new) = free_listp1_2;
         GET_PREV(free_listp1_2) = new;
         GET_PREV(new) = NULL;
@@ -121,11 +122,11 @@ static void add_to_list(void* new, size_t size){
         GET_PREV(free_listp33_inf) = new;
         GET_PREV(new) = NULL;
         free_listp33_inf = new;
-    }
+    }*/
 }
 
 static void fill_block(void* current,size_t size){
-    if(GET_PREV(current)==NULL){
+    /*if(GET_PREV(current)==NULL){
         
         if (size <= 2) {
             free_listp1_2 = GET_NEXT(current);
@@ -148,12 +149,12 @@ static void fill_block(void* current,size_t size){
     }else{
         GET_NEXT(GET_PREV(current))=GET_NEXT(current);
     }
-    GET_PREV(GET_NEXT(current))=GET_PREV(current);
+    GET_PREV(GET_NEXT(current))=GET_PREV(current);*/
 }
 
 static void *find_first_fit(size_t asize)
 {
-    void *bp;
+    /*void *bp;
     if (asize <= 2) {
         for (bp = free_listp1_2; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
             if (asize <= GET_SIZE(HDRP(bp)))
@@ -190,7 +191,7 @@ static void *find_first_fit(size_t asize)
                 return bp;
         }
     }
-    
+    */
     return NULL;
 }
 
@@ -273,9 +274,14 @@ static void *extend_heap(size_t words){
 int mm_init(void)
 {
 
+    /*Creat the seglist pointers for da heap*/
+    if((free_listp = mem_sbrk(7 * WSIZE)) == NULL){
+        return -1;   
+    }
     /* Create the initial empty heap. */
     if ((heap_listp = mem_sbrk(8 * WSIZE)) == NULL)
         return -1;
+    
     
     PUT(heap_listp, 0); /*Alignment Padding*/
     PUT(heap_listp+WSIZE, PACK(DSIZE, 1)); /*Prologue Header*/
@@ -283,12 +289,31 @@ int mm_init(void)
     PUT(heap_listp+WSIZE+DSIZE, PACK(0, 1));/*Epliogue Header*/
     heap_listp += DSIZE;
     
-    free_listp1_2 = heap_listp;
-    free_listp3_4 = heap_listp;
-    free_listp5_8 = heap_listp;
-    free_listp9_16 = heap_listp;
-    free_listp17_32 = heap_listp;
-    free_listp33_inf = heap_listp;
+    /*
+    Seg List:
+    0-2
+    2-4
+    4-8
+    8-16
+    16-32
+    32-64
+    64-inf
+    */
+    
+    PUT(heap_listp + 0, (size_t) NULL);
+    PUT(heap_listp + 2, (size_t) NULL);
+    PUT(heap_listp + 4, (size_t) NULL);
+    PUT(heap_listp + 8, (size_t) NULL);
+    PUT(heap_listp + 16, (size_t) NULL);
+    PUT(heap_listp + 32, (size_t) NULL);
+    PUT(heap_listp + 64, (size_t) NULL);
+    
+//     free_listp1_2 = heap_listp;
+//     free_listp3_4 = heap_listp;
+//     free_listp5_8 = heap_listp;
+//     free_listp9_16 = heap_listp;
+//     free_listp17_32 = heap_listp;
+//     free_listp33_inf = heap_listp;
 
     /* Extend the empty heap with a free block */
     if (extend_heap(CHUNKSIZE/WSIZE) == NULL)
