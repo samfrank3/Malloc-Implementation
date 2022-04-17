@@ -300,13 +300,13 @@ int mm_init(void)
     64-inf
     */
     
-    PUT(heap_listp + 0, (size_t) NULL);
-    PUT(heap_listp + 2, (size_t) NULL);
-    PUT(heap_listp + 4, (size_t) NULL);
-    PUT(heap_listp + 8, (size_t) NULL);
-    PUT(heap_listp + 16, (size_t) NULL);
-    PUT(heap_listp + 32, (size_t) NULL);
-    PUT(heap_listp + 64, (size_t) NULL);
+    PUT(free_listp + 0, (size_t) NULL);
+    PUT(free_listp + 2, (size_t) NULL);
+    PUT(free_listp + 4, (size_t) NULL);
+    PUT(free_listp + 8, (size_t) NULL);
+    PUT(free_listp + 16, (size_t) NULL);
+    PUT(free_listp + 32, (size_t) NULL);
+    PUT(free_listp + 64, (size_t) NULL);
     
 //     free_listp1_2 = heap_listp;
 //     free_listp3_4 = heap_listp;
