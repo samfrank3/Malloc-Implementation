@@ -77,18 +77,74 @@ team_t team = {
 #define GET_PREV(p)  (*(char **)(p + WSIZE))
 
 static char *heap_listp;
-static char* free_listp;
+static char* free_listp1_2;
+static char* free_listp3_4;
+static char* free_listp5_8;
+static char* free_listp9_16;
+static char* free_listp17_32;
+static char* free_listp33_inf;
 
-static void add_to_list(void* new){
-    GET_NEXT(new) = free_listp;
-    GET_PREV(free_listp) = new;
-    GET_PREV(new) = NULL;
-    free_listp = new;
+
+static void add_to_list(void* new, int size){
+    if (size <= 2) {
+        GET_NEXT(new) = free_listp1_2;
+        GET_PREV(free_listp1_2) = new;
+        GET_PREV(new) = NULL;
+        free_listp1_2 = new;
+    }
+    else if (size <=4){
+        GET_NEXT(new) = free_listp3_4;
+        GET_PREV(free_listp3_4) = new;
+        GET_PREV(new) = NULL;
+        free_listp3_4 = new;
+    }
+    else if (size <=8){
+        GET_NEXT(new) = free_listp5_8;
+        GET_PREV(free_listp5_8) = new;
+        GET_PREV(new) = NULL;
+        free_listp5_8 = new;
+    }
+    else if (size <=16){
+        GET_NEXT(new) = free_listp9_16;
+        GET_PREV(free_listp9_16) = new;
+        GET_PREV(new) = NULL;
+        free_listp9_16 = new;
+    }
+    else if (size <=32){
+        GET_NEXT(new) = free_listp17_32;
+        GET_PREV(free_listp17_32) = new;
+        GET_PREV(new) = NULL;
+        free_listp17_32 = new;
+    }
+    else {
+        GET_NEXT(new) = free_listp33_inf;
+        GET_PREV(free_listp33_inf) = new;
+        GET_PREV(new) = NULL;
+        free_listp33_inf = new;
+    }
 }
 
-static void fill_block(void* current){
+static void fill_block(void* current,int size){
     if(GET_PREV(current)==NULL){
-        free_listp = GET_NEXT(current);
+        
+        if (size <= 2) {
+            free_listp1_2 = GET_NEXT(current);
+        }
+        else if (size <=4){
+            free_listp3_4 = GET_NEXT(current);
+        }
+        else if (size <=8){
+            free_listp5_8 = GET_NEXT(current);
+        }
+        else if (size <=16){
+            free_listp9_16 = GET_NEXT(current);
+        }
+        else if (size <=32){
+            free_listp17_32 = GET_NEXT(current);
+        }
+        else {
+            free_listp33_inf = GET_NEXT(current);
+        }
     }else{
         GET_NEXT(GET_PREV(current))=GET_NEXT(current);
     }
@@ -113,7 +169,7 @@ static void *coalesce(void *bp){
     size_t size = GET_SIZE(HDRP(bp));
     
     if (prev_alloc && next_alloc) {
-        add_to_list(bp);
+        add_to_list(bp, size);
         return bp;
     }
     else if (prev_alloc && !next_alloc) {
@@ -138,7 +194,7 @@ static void *coalesce(void *bp){
         bp = PREV_BLKP(bp);
     }
     
-    add_to_list(bp);
+    add_to_list(bp, size);
     return bp;
 }
 
