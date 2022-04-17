@@ -85,7 +85,7 @@ static char* free_listp17_32;
 static char* free_listp33_inf;
 
 
-static void add_to_list(void* new, int size){
+static void add_to_list(void* new, size_t size){
     if (size <= 2) {
         GET_NEXT(new) = free_listp1_2;
         GET_PREV(free_listp1_2) = new;
@@ -124,7 +124,7 @@ static void add_to_list(void* new, int size){
     }
 }
 
-static void fill_block(void* current,int size){
+static void fill_block(void* current,size_t size){
     if(GET_PREV(current)==NULL){
         
         if (size <= 2) {
@@ -205,21 +205,21 @@ static void *coalesce(void *bp){
     }
     else if (prev_alloc && !next_alloc) {
         size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
-        fill_block(NEXT_BLKP(bp));
+        fill_block(NEXT_BLKP(bp),size);
         PUT(HDRP(bp), PACK(size, 0));
         PUT(FTRP(bp), PACK(size,0));
     }
     else if (!prev_alloc && next_alloc) {
         size += GET_SIZE(HDRP(PREV_BLKP(bp)));
-        fill_block(PREV_BLKP(bp));
+        fill_block(PREV_BLKP(bp), size);
         PUT(FTRP(bp), PACK(size, 0));
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
         bp = PREV_BLKP(bp);
     }
     else { /* Case 4 */
         size += GET_SIZE(HDRP(PREV_BLKP(bp))) + GET_SIZE(FTRP(NEXT_BLKP(bp)));
-        fill_block(NEXT_BLKP(bp));
-        fill_block(PREV_BLKP(bp));
+        fill_block(NEXT_BLKP(bp),size);
+        fill_block(PREV_BLKP(bp),size);
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
         PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
         bp = PREV_BLKP(bp);
@@ -235,7 +235,7 @@ static void place(void *bp, size_t asize){
     if ((csize - asize) >= (2 * DSIZE)) {
         PUT(HDRP(bp), PACK(asize, 1));
         PUT(FTRP(bp), PACK(asize, 1));
-        fill_block(bp);
+        fill_block(bp, asize);
         bp = NEXT_BLKP(bp);
         PUT(HDRP(bp), PACK(csize - asize, 0));
         PUT(FTRP(bp), PACK(csize - asize, 0));
@@ -243,7 +243,7 @@ static void place(void *bp, size_t asize){
     } else {
         PUT(HDRP(bp), PACK(csize, 1));
         PUT(FTRP(bp), PACK(csize, 1));
-        fill_block(bp);
+        fill_block(bp, asize);
     }
 }
 
@@ -283,7 +283,12 @@ int mm_init(void)
     PUT(heap_listp+WSIZE+DSIZE, PACK(0, 1));/*Epliogue Header*/
     heap_listp += DSIZE;
     
-    free_listp = heap_listp;
+    free_listp1_2 = heap_listp;
+    free_listp3_4 = heap_listp;
+    free_listp5_8 = heap_listp;
+    free_listp9_16 = heap_listp;
+    free_listp17_32 = heap_listp;
+    free_listp33_inf = heap_listp;
 
     /* Extend the empty heap with a free block */
     if (extend_heap(CHUNKSIZE/WSIZE) == NULL)
@@ -393,7 +398,7 @@ void *mm_realloc(void *ptr, size_t size)
         size_t total_free_size = oldsize + next_blk_size;
 
         if(!if_next_alloc && total_free_size>= newsize){
-            fill_block(NEXT_BLKP(ptr));
+            fill_block(NEXT_BLKP(ptr),size);
             PUT(HDRP(ptr),PACK(total_free_size,1));
             PUT(FTRP(ptr),PACK(total_free_size,1));
             return ptr;
