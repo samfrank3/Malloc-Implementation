@@ -154,12 +154,43 @@ static void fill_block(void* current,int size){
 static void *find_first_fit(size_t asize)
 {
     void *bp;
-
-    for (bp = free_listp; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-        if (asize <= GET_SIZE(HDRP(bp)))
-            return bp;
+    if (asize <= 2) {
+        for (bp = free_listp1_2; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+            if (asize <= GET_SIZE(HDRP(bp)))
+                return bp;
+        }
     }
-
+    else if (asize <= 4) {
+        for (bp = free_listp3_4; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+            if (asize <= GET_SIZE(HDRP(bp)))
+                return bp;
+        }
+    }
+    else if (asize <= 8) {
+        for (bp = free_listp5_8; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+            if (asize <= GET_SIZE(HDRP(bp)))
+                return bp;
+        }
+    }
+    else if (asize <= 16) {
+        for (bp = free_listp9_16; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+            if (asize <= GET_SIZE(HDRP(bp)))
+                return bp;
+        }
+    }
+    else if (asize <= 32) {
+        for (bp = free_listp17_32; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+            if (asize <= GET_SIZE(HDRP(bp)))
+                return bp;
+        }
+    }
+    else {
+        for (bp = free_listp33_inf; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+            if (asize <= GET_SIZE(HDRP(bp)))
+                return bp;
+        }
+    }
+    
     return NULL;
 }
 
