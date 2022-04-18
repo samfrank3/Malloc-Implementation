@@ -120,7 +120,7 @@ static void add_to_list(void* new, size_t size){
             PUT(GET_NEXT(new), (size_t) GET(heap_listp + 16));
             PUT(GET_PREV(new), (size_t) NULL);
             PUT(GET_PREV(GET(heap_listp + 16)), (size_t) new);
-        }   
+        }
     }else if(size <= 16){
         if(GET(free_listp + 24) == (size_t) NULL){
             PUT((free_listp + 24), (size_t) new);
@@ -131,7 +131,7 @@ static void add_to_list(void* new, size_t size){
             PUT(GET_NEXT(new), (size_t) GET(heap_listp + 24));
             PUT(GET_PREV(new), (size_t) NULL);
             PUT(GET_PREV(GET(heap_listp + 24)), (size_t) new);
-        }   
+        }
     }else if(size <= 32){
         if(GET(free_listp + 32) == (size_t) NULL){
             PUT((free_listp + 32), (size_t) new);
@@ -142,7 +142,7 @@ static void add_to_list(void* new, size_t size){
             PUT(GET_NEXT(new), (size_t) GET(heap_listp + 32));
             PUT(GET_PREV(new), (size_t) NULL);
             PUT(GET_PREV(GET(heap_listp + 32)), (size_t) new);
-        }   
+        }
     }else if(size <= 64){
         if(GET(free_listp + 40) == (size_t) NULL){
             PUT((free_listp + 40), (size_t) new);
@@ -153,7 +153,7 @@ static void add_to_list(void* new, size_t size){
             PUT(GET_NEXT(new), (size_t) GET(heap_listp + 40));
             PUT(GET_PREV(new), (size_t) NULL);
             PUT(GET_PREV(GET(heap_listp + 40)), (size_t) new);
-        }   
+        }
     }else{
         if(GET(free_listp + 48) == (size_t) NULL){
             PUT((free_listp + 48), (size_t) new);
@@ -164,7 +164,7 @@ static void add_to_list(void* new, size_t size){
             PUT(GET_NEXT(new), (size_t) GET(heap_listp + 48));
             PUT(GET_PREV(new), (size_t) NULL);
             PUT(GET_PREV(GET(heap_listp + 48)), (size_t) new);
-        } 
+        }
     }
     
     
@@ -207,7 +207,7 @@ static void add_to_list(void* new, size_t size){
 }
 
 static void fill_block(void* current,size_t size){
-    if(GET(GET_PREV(current)) == NULL && GET(GET_NEXT(current)) != NULL){
+    if((GET(GET_PREV(current)) == (size_t) NULL) && (GET(GET_NEXT(current)) != (size_t) NULL)){
         if(size <= 2){
             PUT((free_listp + 0), (size_t) GET(GET_NEXT(current)));
         }
