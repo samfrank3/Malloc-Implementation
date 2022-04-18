@@ -207,6 +207,11 @@ static void add_to_list(void* new, size_t size){
 }
 
 static void fill_block(void* current,size_t size){
+    if(GET(GET_PREV(current)) == NULL && GET(GET_NEXT(current)) != NULL){
+        if(size <= 2){
+            PUT((free_listp + 0), (size_t) GET(GET_NEXT(current)));
+        }
+    }
     /*if(GET_PREV(current)==NULL){
         
         if (size <= 2) {
