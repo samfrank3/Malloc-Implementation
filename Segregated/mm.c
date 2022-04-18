@@ -87,6 +87,19 @@ static char  *free_listp;
 
 
 static void add_to_list(void* new, size_t size){
+    if(size <= 2){
+        if(GET(free_listp + 0) == NULL){
+            PUT((free_listp + 0), (size_t)bp);
+            PUT(GET_NEXT(bp), NULL);
+            PUT(GET_PREV(bp), NULL);
+        }else{
+            PUT((free_listp + 0), (size_t) bp);
+            PUT(GET_NEXT(bp), (size_t) GET(heap_listp +0));
+            PUT(GET_PREV(bp), NULL);
+            PUT(GET_PREV(GET(heap_listp +0)), (size_t) bp);
+        }
+    }
+    
     /*if (size <= 2) {
         GET_NEXT(new) = free_listp1_2;
         GET_PREV(free_listp1_2) = new;
