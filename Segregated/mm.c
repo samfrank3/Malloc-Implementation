@@ -272,8 +272,73 @@ static void fill_block(void* current,size_t size){
     GET_PREV(GET_NEXT(current))=GET_PREV(current);*/
 }
 
-static void *find_first_fit(size_t asize)
-{
+static void *find_first_fit(size_t asize){
+    if(asize <= 2){
+        for(size_t start = 0; start < 7; size++){
+            void *bp; 
+            for(bp = GET(heap_listp + 0); GET_ALLOC(HDRP(bp)) == 0; bp = GET(GET_NEXT(bp))){
+                if(asize <= GET_SIZE(HDRP(current))){
+                    return bp;
+                }
+            }
+        }
+    }else if(size <= 4){
+         for(size_t start = 1; start < 7; size++){
+            void *bp; 
+            for(bp = GET(heap_listp + 8); GET_ALLOC(HDRP(bp)) == 0; bp = GET(GET_NEXT(bp))){
+                if(asize <= GET_SIZE(HDRP(current))){
+                    return bp;
+                }
+            }
+        }  
+    }else if(size <= 8){
+        for(size_t start = 2; start < 7; size++){
+            void *bp; 
+            for(bp = GET(heap_listp + 16); GET_ALLOC(HDRP(bp)) == 0; bp = GET(GET_NEXT(bp))){
+                if(asize <= GET_SIZE(HDRP(current))){
+                    return bp;
+                }
+            }
+        }   
+    }else if(size <= 16){
+          for(size_t start = 3; start < 7; size++){
+            void *bp; 
+            for(bp = GET(heap_listp + 24); GET_ALLOC(HDRP(bp)) == 0; bp = GET(GET_NEXT(bp))){
+                if(asize <= GET_SIZE(HDRP(current))){
+                    return bp;
+                }
+            }
+        }   
+    }else if(size <= 32){
+        for(size_t start = 4; start < 7; size++){
+            void *bp; 
+            for(bp = GET(heap_listp + 32); GET_ALLOC(HDRP(bp)) == 0; bp = GET(GET_NEXT(bp))){
+                if(asize <= GET_SIZE(HDRP(current))){
+                    return bp;
+                }
+            }
+        }     
+    }else if(size <= 64){
+        for(size_t start = 5; start < 7; size++){
+            void *bp; 
+            for(bp = GET(heap_listp + 40); GET_ALLOC(HDRP(bp)) == 0; bp = GET(GET_NEXT(bp))){
+                if(asize <= GET_SIZE(HDRP(current))){
+                    return bp;
+                }
+            }
+        }     
+    }else{
+        for(size_t start = 6; start < 7; size++){
+            void *bp; 
+            for(bp = GET(heap_listp + 48); GET_ALLOC(HDRP(bp)) == 0; bp = GET(GET_NEXT(bp))){
+                if(asize <= GET_SIZE(HDRP(current))){
+                    return bp;
+                }
+            }
+        }     
+    }
+    
+    
     /*void *bp;
     if (asize <= 2) {
         for (bp = free_listp1_2; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
