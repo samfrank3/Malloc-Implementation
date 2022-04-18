@@ -243,8 +243,8 @@ static void fill_block(void* current,size_t size){
     }else if((GET(GET_PREV(current)) != (size_t) NULL) && (GET(GET_NEXT(current)) == (size_t) NULL)){
         PUT(GET_NEXT(GET(GET_PREV(current))), (size_t) NULL);
     }else{
-        PUT(PREDECESSOR(nextaddress), (size_t) prevaddress);
-        PUT(SUCCESSOR(prevaddress), (size_t) nextaddress);
+        PUT(GET_NEXT(GET(GET_NEXT(current))), (size_t) GET(GET_PREV(current)));
+        PUT(GET_PREV(GET(GET_PREV(current))), (size_t) GET(GET_NEXT(current)));
     }
     /*if(GET_PREV(current)==NULL){
         
