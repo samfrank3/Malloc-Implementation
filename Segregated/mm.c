@@ -303,10 +303,10 @@ int mm_init(void)
     PUT(free_listp + 0, NULL);
     PUT(free_listp + 8, NULL);
     PUT(free_listp + 16, NULL);
+    PUT(free_listp + 24, NULL);
     PUT(free_listp + 32, NULL);
     PUT(free_listp + 40, NULL);
     PUT(free_listp + 48, NULL);
-    PUT(free_listp + 56, NULL);
     
 //     free_listp1_2 = heap_listp;
 //     free_listp3_4 = heap_listp;
