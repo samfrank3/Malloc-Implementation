@@ -223,10 +223,10 @@ static void fill_block(void* current,size_t size){
         }else{
             PUT((free_listp + 48), (size_t) GET(GET_NEXT(current)));
         }
-        PUT(GET_PREV(GET(GET_NEXT(current)), (size_t) NULL);
+        PUT(GET_PREV(GET(GET_NEXT(current))), (size_t) NULL);
     }else if((GET(GET_PREV(current)) == (size_t) NULL) && (GET(GET_NEXT(current)) == (size_t) NULL)){
         if(size <= 2){
-            PUT(free_listp + 0, (size_t) NULL);   
+            PUT(free_listp + 0, (size_t) NULL);
         }else if(size <= 4){
             PUT(free_listp + 8, (size_t) NULL);
         }else if(size <= 8){
@@ -241,9 +241,10 @@ static void fill_block(void* current,size_t size){
             PUT(free_listp + 48, (size_t) NULL);
         }
     }else if((GET(GET_PREV(current)) != (size_t) NULL) && (GET(GET_NEXT(current)) == (size_t) NULL)){
-        PUT(GET_NEXT(GET(GET_PREV(current)), (size_t) NULL);
+        PUT(GET_NEXT(GET(GET_PREV(current))), (size_t) NULL);
     }else{
-           
+        PUT(PREDECESSOR(nextaddress), (size_t) prevaddress);
+        PUT(SUCCESSOR(prevaddress), (size_t) nextaddress);
     }
     /*if(GET_PREV(current)==NULL){
         
