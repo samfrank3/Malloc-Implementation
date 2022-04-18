@@ -87,16 +87,17 @@ static char  *free_listp;
 
 
 static void add_to_list(void* new, size_t size){
+    
     if(size <= 2){
-        if(GET(free_listp + 0) == NULL){
-            PUT((free_listp + 0), (size_t)bp);
-            PUT(GET_NEXT(bp), NULL);
-            PUT(GET_PREV(bp), NULL);
+        if(GET(free_listp + 0) == (size_t) NULL){
+            PUT((free_listp + 0), (size_t) new);
+            PUT(GET_NEXT(new), (size_t) NULL);
+            PUT(GET_PREV(new), (size_t) NULL);
         }else{
-            PUT((free_listp + 0), (size_t) bp);
-            PUT(GET_NEXT(bp), (size_t) GET(heap_listp +0));
-            PUT(GET_PREV(bp), NULL);
-            PUT(GET_PREV(GET(heap_listp +0)), (size_t) bp);
+            PUT((free_listp + 0), (size_t) new);
+            PUT(GET_NEXT(new), (size_t) GET(heap_listp +0));
+            PUT(GET_PREV(new), (size_t) NULL);
+            PUT(GET_PREV(GET(heap_listp +0)), (size_t) new);
         }
     }
     
@@ -289,7 +290,7 @@ int mm_init(void)
 
     /*Creat the seglist pointers for da heap*/
     if((free_listp = mem_sbrk(7 * WSIZE)) == NULL){
-        return -1;   
+        return -1;
     }
     /* Create the initial empty heap. */
     if ((heap_listp = mem_sbrk(8 * WSIZE)) == NULL)
