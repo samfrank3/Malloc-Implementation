@@ -210,8 +210,6 @@ static void *find_first_fit(size_t asize)
 {
 	/*
 	int main () {
-
-   /* local variable definition */
    char grade = 'B';
 
    switch(grade) {
@@ -235,32 +233,62 @@ static void *find_first_fit(size_t asize)
    printf("Your grade is  %c\n", grade );
  
    return 0;
-}
-	*/
-    /**
-    switch(expression) {
+// }
+// 	*/
 
-   case constant-expression  :
-      statement(s);
-      break; /* optional */
-	
-   case constant-expression  :
-      statement(s);
-      break; /* optional */
-  
-   /* you can have any number of case statements */
-   default : /* Optional */
-   statement(s);
-} */
-    
-    void *bp;
-
-    for (bp = free_listp; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-        if (asize <= GET_SIZE(HDRP(bp)))
-            return bp;
+    switch(asize){
+        case <2 :
+	    for (bp = free_listp1; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+		if (asize <= GET_SIZE(HDRP(bp)))
+		    return bp;
+		}
+    	    }
+	case < 4:
+	    for (bp = free_listp2; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+		if (asize <= GET_SIZE(HDRP(bp)))
+		    return bp;
+		}
+    	    }
+	case < 8:
+	    for (bp = free_listp3; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+		if (asize <= GET_SIZE(HDRP(bp)))
+		    return bp;
+		}
+    	    }
+	case < 16: 
+	    for (bp = free_listp4; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+		if (asize <= GET_SIZE(HDRP(bp)))
+		    return bp;
+		}
+    	    }
+	case < 32:
+	    for (bp = free_listp5; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+		if (asize <= GET_SIZE(HDRP(bp)))
+		    return bp;
+		}
+    	    }
+	case < 64:
+	    for (bp = free_listp6; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+		if (asize <= GET_SIZE(HDRP(bp)))
+		    return bp;
+		}
+    	    }
+	default:
+	    for (bp = free_listp7; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+		if (asize <= GET_SIZE(HDRP(bp)))
+		    return bp;
+		}
+    	    }
     }
-
     return NULL;
+//     void *bp;
+
+//     for (bp = free_listp; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+//         if (asize <= GET_SIZE(HDRP(bp)))
+//             return bp;
+//     }
+
+//     return NULL;
 }
 
 static void *coalesce(void *bp){
