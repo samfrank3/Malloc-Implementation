@@ -101,40 +101,40 @@ static void add_to_list(void* new){
     size_t size = GET_SIZE(HDRP(new));
     
     if(size <= 2){
-        GET_NEXT(new) = free_listp1; 
+        GET_NEXT(new) = free_listp1;
         GET_PREV(free_listp1) = new;
         GET_PREV(new) = NULL;
-        free_listp1 = new; 
+        free_listp1 = new;
     }else if(size <= 4){
-        GET_NEXT(new) = free_listp2; 
+        GET_NEXT(new) = free_listp2;
         GET_PREV(free_listp2) = new;
         GET_PREV(new) = NULL;
-        free_listp2 = new;  
+        free_listp2 = new;
     }else if(size <= 8){
-        GET_NEXT(new) = free_listp3; 
+        GET_NEXT(new) = free_listp3;
         GET_PREV(free_listp3) = new;
         GET_PREV(new) = NULL;
-        free_listp3 = new;  
+        free_listp3 = new;
     }else if(size <= 16){
-        GET_NEXT(new) = free_listp4; 
+        GET_NEXT(new) = free_listp4;
         GET_PREV(free_listp4) = new;
         GET_PREV(new) = NULL;
-        free_listp4 = new; 
+        free_listp4 = new;
     }else if(size <= 32){
-        GET_NEXT(new) = free_listp5; 
+        GET_NEXT(new) = free_listp5;
         GET_PREV(free_listp5) = new;
         GET_PREV(new) = NULL;
-        free_listp5 = new; 
+        free_listp5 = new;
     }else if(size <= 64){
-        GET_NEXT(new) = free_listp6; 
+        GET_NEXT(new) = free_listp6;
         GET_PREV(free_listp6) = new;
         GET_PREV(new) = NULL;
-        free_listp6 = new; 
+        free_listp6 = new;
     }else{
-        GET_NEXT(new) = free_listp7; 
+        GET_NEXT(new) = free_listp7;
         GET_PREV(free_listp7) = new;
         GET_PREV(new) = NULL;
-        free_listp7 = new; 
+        free_listp7 = new;
     }
     
 //     explicit list code
@@ -167,82 +167,83 @@ static void fill_block(void* current){
         }else{
             GET_NEXT(GET_PREV(current))=GET_NEXT(current);
         }
-        GET_PREV(GET_NEXT(current))=GET_PREV(current);   
+        GET_PREV(GET_NEXT(current))=GET_PREV(current);
     }else if(size <= 16){
         if(GET_PREV(current)==NULL){
             free_listp4 = GET_NEXT(current);
         }else{
             GET_NEXT(GET_PREV(current))=GET_NEXT(current);
         }
-        GET_PREV(GET_NEXT(current))=GET_PREV(current);   
+        GET_PREV(GET_NEXT(current))=GET_PREV(current);
     }else if(size <= 32){
         if(GET_PREV(current)==NULL){
             free_listp5 = GET_NEXT(current);
         }else{
             GET_NEXT(GET_PREV(current))=GET_NEXT(current);
         }
-        GET_PREV(GET_NEXT(current))=GET_PREV(current);  
+        GET_PREV(GET_NEXT(current))=GET_PREV(current);
     }else if(size <= 64){
        if(GET_PREV(current)==NULL){
             free_listp6 = GET_NEXT(current);
         }else{
             GET_NEXT(GET_PREV(current))=GET_NEXT(current);
         }
-        GET_PREV(GET_NEXT(current))=GET_PREV(current); 
+        GET_PREV(GET_NEXT(current))=GET_PREV(current);
     }else{
        if(GET_PREV(current)==NULL){
             free_listp7 = GET_NEXT(current);
         }else{
             GET_NEXT(GET_PREV(current))=GET_NEXT(current);
         }
-        GET_PREV(GET_NEXT(current))=GET_PREV(current); 
+        GET_PREV(GET_NEXT(current))=GET_PREV(current);
     }
 }
 
 static void *find_first_fit(size_t asize){
+    void* bp;
     if(asize <= 2){
-	for (bp = free_listp1; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-		if (asize <= GET_SIZE(HDRP(bp)))
-		    return bp;
-    	}    
+        for (bp = free_listp1; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+            if (asize <= GET_SIZE(HDRP(bp)))
+                return bp;
+        }
     }
     if(asize <= 4){
-	for (bp = free_listp2; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-		if (asize <= GET_SIZE(HDRP(bp)))
-		    return bp;
-    	}    
+        for (bp = free_listp2; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+            if (asize <= GET_SIZE(HDRP(bp)))
+                return bp;
+        }
     }
     if(asize <= 8){
-	for (bp = free_listp3; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-		if (asize <= GET_SIZE(HDRP(bp)))
-		    return bp;
-    	}    
+        for (bp = free_listp3; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+            if (asize <= GET_SIZE(HDRP(bp)))
+                return bp;
+        }
     }
     if(asize <= 16){
-	 for (bp = free_listp4; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-		if (asize <= GET_SIZE(HDRP(bp)))
-		    return bp;
-    	}  
+        for (bp = free_listp4; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+            if (asize <= GET_SIZE(HDRP(bp)))
+                return bp;
+        }
     }
     if(asize <= 32){
-	 for (bp = free_listp5; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-		if (asize <= GET_SIZE(HDRP(bp)))
-		    return bp;
-    	}   
+        for (bp = free_listp5; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+            if (asize <= GET_SIZE(HDRP(bp)))
+                return bp;
+        }
     }
     if(asize <= 64){
-	for (bp = free_listp6; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-		if (asize <= GET_SIZE(HDRP(bp)))
-		    return bp;
-    	}    
+        for (bp = free_listp6; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+            if (asize <= GET_SIZE(HDRP(bp)))
+                return bp;
+        }
     }
-    if(size > 64){
-	for (bp = free_listp7; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-		if (asize <= GET_SIZE(HDRP(bp)))
-		    return bp;
-    	}   
+    if(asize > 64){
+        for (bp = free_listp7; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+            if (asize <= GET_SIZE(HDRP(bp)))
+                return bp;
+        }
     }
-
+    return NULL;
 }
 
 static void *coalesce(void *bp){
