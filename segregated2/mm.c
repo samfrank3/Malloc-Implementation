@@ -180,7 +180,7 @@ static void add_to_list(void* new){
         }
     }
     
-//     explicit list code 
+//     explicit list code
 //     GET_NEXT(new) = free_listp;
 //     GET_PREV(free_listp) = new;
 //     GET_PREV(new) = NULL;
