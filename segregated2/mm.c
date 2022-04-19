@@ -208,6 +208,22 @@ static void fill_block(void* current){
 
 static void *find_first_fit(size_t asize)
 {
+    /**
+    switch(expression) {
+
+   case constant-expression  :
+      statement(s);
+      break; /* optional */
+	
+   case constant-expression  :
+      statement(s);
+      break; /* optional */
+  
+   /* you can have any number of case statements */
+   default : /* Optional */
+   statement(s);
+} */
+    
     void *bp;
 
     for (bp = free_listp; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
