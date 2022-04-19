@@ -87,7 +87,7 @@ static char *heap_listp;
 32-64
 64-inf
 */
-static char* free_listp;
+static char **free_listp;
 
 
 static void add_to_list(void* new){
@@ -98,8 +98,8 @@ static void add_to_list(void* new){
         seg_p = free_listp + 0;
         if(GET(seg_p) == (size_t) NULL){ //empty list
             PUT(seg_p, (size_t) new);
-            PUT(GET_NEXT(size_t), (size_t) NULL);
-            PUT(GET_PREV(size_t), (size_t) seg_p);
+            PUT(GET_NEXT(new), (size_t) NULL);
+            PUT(GET_PREV(new), (size_t) seg_p);
         }else{ //item(s) in list
             PUT(GET_NEXT(new), GET(seg_p));
             PUT(GET_PREV(new), (size_t) seg_p);
@@ -110,8 +110,8 @@ static void add_to_list(void* new){
         seg_p = free_listp + 1;
         if(GET(seg_p) == (size_t) NULL){ //empty list
             PUT(seg_p, (size_t) new);
-            PUT(GET_NEXT(size_t), (size_t) NULL);
-            PUT(GET_PREV(size_t), (size_t) seg_p);
+            PUT(GET_NEXT(new), (size_t) NULL);
+            PUT(GET_PREV(new), (size_t) seg_p);
         }else{ //item(s) in list
             PUT(GET_NEXT(new), GET(seg_p));
             PUT(GET_PREV(new), (size_t) seg_p);
@@ -122,8 +122,8 @@ static void add_to_list(void* new){
         seg_p = free_listp + 2;
         if(GET(seg_p) == (size_t) NULL){ //empty list
             PUT(seg_p, (size_t) new);
-            PUT(GET_NEXT(size_t), (size_t) NULL);
-            PUT(GET_PREV(size_t), (size_t) seg_p);
+            PUT(GET_NEXT(new), (size_t) NULL);
+            PUT(GET_PREV(new), (size_t) seg_p);
         }else{ //item(s) in list
             PUT(GET_NEXT(new), GET(seg_p));
             PUT(GET_PREV(new), (size_t) seg_p);
@@ -134,8 +134,8 @@ static void add_to_list(void* new){
         seg_p = free_listp + 3;
         if(GET(seg_p) == (size_t) NULL){ //empty list
             PUT(seg_p, (size_t) new);
-            PUT(GET_NEXT(size_t), (size_t) NULL);
-            PUT(GET_PREV(size_t), (size_t) seg_p);
+            PUT(GET_NEXT(new), (size_t) NULL);
+            PUT(GET_PREV(new), (size_t) seg_p);
         }else{ //item(s) in list
             PUT(GET_NEXT(new), GET(seg_p));
             PUT(GET_PREV(new), (size_t) seg_p);
@@ -146,8 +146,8 @@ static void add_to_list(void* new){
         seg_p = free_listp + 4;
         if(GET(seg_p) == (size_t) NULL){ //empty list
             PUT(seg_p, (size_t) new);
-            PUT(GET_NEXT(size_t), (size_t) NULL);
-            PUT(GET_PREV(size_t), (size_t) seg_p);
+            PUT(GET_NEXT(new), (size_t) NULL);
+            PUT(GET_PREV(new), (size_t) seg_p);
         }else{ //item(s) in list
             PUT(GET_NEXT(new), GET(seg_p));
             PUT(GET_PREV(new), (size_t) seg_p);
@@ -158,8 +158,8 @@ static void add_to_list(void* new){
         seg_p = free_listp + 5;
         if(GET(seg_p) == (size_t) NULL){ //empty list
             PUT(seg_p, (size_t) new);
-            PUT(GET_NEXT(size_t), (size_t) NULL);
-            PUT(GET_PREV(size_t), (size_t) seg_p);
+            PUT(GET_NEXT(new), (size_t) NULL);
+            PUT(GET_PREV(new), (size_t) seg_p);
         }else{ //item(s) in list
             PUT(GET_NEXT(new), GET(seg_p));
             PUT(GET_PREV(new), (size_t) seg_p);
@@ -170,8 +170,8 @@ static void add_to_list(void* new){
         seg_p = free_listp + 6;
         if(GET(seg_p) == (size_t) NULL){ //empty list
             PUT(seg_p, (size_t) new);
-            PUT(GET_NEXT(size_t), (size_t) NULL);
-            PUT(GET_PREV(size_t), (size_t) seg_p);
+            PUT(GET_NEXT(new), (size_t) NULL);
+            PUT(GET_PREV(new), (size_t) seg_p);
         }else{ //item(s) in list
             PUT(GET_NEXT(new), GET(seg_p));
             PUT(GET_PREV(new), (size_t) seg_p);
