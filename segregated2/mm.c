@@ -197,98 +197,52 @@ static void fill_block(void* current){
         }
         GET_PREV(GET_NEXT(current))=GET_PREV(current); 
     }
-//     explicit lsit code 
-//     if(GET_PREV(current)==NULL){
-//         free_listp = GET_NEXT(current);
-//     }else{
-//         GET_NEXT(GET_PREV(current))=GET_NEXT(current);
-//     }
-//     GET_PREV(GET_NEXT(current))=GET_PREV(current);
 }
 
-static void *find_first_fit(size_t asize)
-{
-	/*
-	int main () {
-   char grade = 'B';
-
-   switch(grade) {
-      case 'A' :
-         printf("Excellent!\n" );
-         break;
-      case 'B' :
-      case 'C' :
-         printf("Well done\n" );
-         break;
-      case 'D' :
-         printf("You passed\n" );
-         break;
-      case 'F' :
-         printf("Better try again\n" );
-         break;
-      default :
-         printf("Invalid grade\n" );
-   }
-   
-   printf("Your grade is  %c\n", grade );
- 
-   return 0;
-// }
-// 	*/
-
-    switch(asize){
-        case <2 :
-	    for (bp = free_listp1; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+static void *find_first_fit(size_t asize){
+    if(asize <= 2){
+	for (bp = free_listp1; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
 		if (asize <= GET_SIZE(HDRP(bp)))
 		    return bp;
-		}
-    	    }
-	case < 4:
-	    for (bp = free_listp2; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-		if (asize <= GET_SIZE(HDRP(bp)))
-		    return bp;
-		}
-    	    }
-	case < 8:
-	    for (bp = free_listp3; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-		if (asize <= GET_SIZE(HDRP(bp)))
-		    return bp;
-		}
-    	    }
-	case < 16: 
-	    for (bp = free_listp4; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-		if (asize <= GET_SIZE(HDRP(bp)))
-		    return bp;
-		}
-    	    }
-	case < 32:
-	    for (bp = free_listp5; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-		if (asize <= GET_SIZE(HDRP(bp)))
-		    return bp;
-		}
-    	    }
-	case < 64:
-	    for (bp = free_listp6; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-		if (asize <= GET_SIZE(HDRP(bp)))
-		    return bp;
-		}
-    	    }
-	default:
-	    for (bp = free_listp7; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-		if (asize <= GET_SIZE(HDRP(bp)))
-		    return bp;
-		}
-    	    }
+    	}    
     }
-    return NULL;
-//     void *bp;
+    if(asize <= 4){
+	for (bp = free_listp2; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+		if (asize <= GET_SIZE(HDRP(bp)))
+		    return bp;
+    	}    
+    }
+    if(asize <= 8){
+	for (bp = free_listp3; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+		if (asize <= GET_SIZE(HDRP(bp)))
+		    return bp;
+    	}    
+    }
+    if(asize <= 16){
+	 for (bp = free_listp4; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+		if (asize <= GET_SIZE(HDRP(bp)))
+		    return bp;
+    	}  
+    }
+    if(asize <= 32){
+	 for (bp = free_listp5; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+		if (asize <= GET_SIZE(HDRP(bp)))
+		    return bp;
+    	}   
+    }
+    if(asize <= 64){
+	for (bp = free_listp6; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+		if (asize <= GET_SIZE(HDRP(bp)))
+		    return bp;
+    	}    
+    }
+    if(size > 64){
+	for (bp = free_listp7; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
+		if (asize <= GET_SIZE(HDRP(bp)))
+		    return bp;
+    	}   
+    }
 
-//     for (bp = free_listp; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
-//         if (asize <= GET_SIZE(HDRP(bp)))
-//             return bp;
-//     }
-
-//     return NULL;
 }
 
 static void *coalesce(void *bp){
@@ -373,14 +327,20 @@ int mm_init(void)
     /* Create the initial empty heap. */
     if ((heap_listp = mem_sbrk(8 * WSIZE)) == NULL)
         return -1;
+    free_listp1 = heap_listp;
+    free_listp2 = heap_listp;
+    free_listp3 = heap_listp;
+    free_listp4 = heap_listp;
+    free_listp5 = heap_listp;
+    free_listp6 = heap_listp;
+    free_listp7 = heap_listp;
     
     PUT(heap_listp, 0); /*Alignment Padding*/
     PUT(heap_listp+WSIZE, PACK(DSIZE, 1)); /*Prologue Header*/
     PUT(heap_listp + DSIZE, PACK(DSIZE, 1));/*Prologue Footer*/
     PUT(heap_listp+WSIZE+DSIZE, PACK(0, 1));/*Epliogue Header*/
-    heap_listp += DSIZE;
     
-    free_listp = heap_listp;
+    heap_listp += DSIZE;
 
     /* Extend the empty heap with a free block */
     if (extend_heap(CHUNKSIZE/WSIZE) == NULL)
@@ -485,11 +445,11 @@ void *mm_realloc(void *ptr, size_t size)
         return ptr;
     }
     else{
-        size_t if_next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
+        size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
         size_t next_blk_size = GET_SIZE(HDRP(NEXT_BLKP(ptr)));
         size_t total_free_size = oldsize + next_blk_size;
 
-        if(!if_next_alloc && total_free_size>= newsize){
+        if(!next_alloc && total_free_size>= newsize){
             fill_block(NEXT_BLKP(ptr));
             PUT(HDRP(ptr),PACK(total_free_size,1));
             PUT(FTRP(ptr),PACK(total_free_size,1));
