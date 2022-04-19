@@ -98,6 +98,7 @@ static char *free_listp7;
 
 
 static void add_to_list(void* new){
+    printf("add_to_list\n");
     size_t size = GET_SIZE(HDRP(new));
     
     if(size <= 2){
@@ -145,6 +146,7 @@ static void add_to_list(void* new){
 }
 
 static void fill_block(void* current){
+    printf("fill_block\n");
     size_t size = GET_SIZE(HDRP(current));
     
     if(size <= 2){
@@ -200,6 +202,7 @@ static void fill_block(void* current){
 }
 
 static void *find_first_fit(size_t asize){
+    printf("find_first_fit\n");
     void* bp;
     if(asize <= 2){
         for (bp = free_listp1; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT(bp)) {
@@ -247,6 +250,7 @@ static void *find_first_fit(size_t asize){
 }
 
 static void *coalesce(void *bp){
+    printf("coalesce\n");
     size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp))) || PREV_BLKP(bp) == bp;
     size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
     size_t size = GET_SIZE(HDRP(bp));
@@ -282,6 +286,7 @@ static void *coalesce(void *bp){
 }
 
 static void place(void *bp, size_t asize){
+    printf("place\n");
     size_t csize = GET_SIZE(HDRP(bp));
 
     if ((csize - asize) >= (2 * DSIZE)) {
@@ -300,6 +305,7 @@ static void place(void *bp, size_t asize){
 }
 
 static void *extend_heap(size_t words){
+    printf("extend_heap\n");
     void *bp;
     size_t size;
 
@@ -324,7 +330,7 @@ static void *extend_heap(size_t words){
  */
 int mm_init(void)
 {
-
+    printf("mm_init\n");
     /* Create the initial empty heap. */
     if ((heap_listp = mem_sbrk(8 * WSIZE)) == NULL)
         return -1;
@@ -355,6 +361,7 @@ int mm_init(void)
  */
 void *mm_malloc(size_t size)
 {
+    printf("mm_alloc\n");
     size_t asize;      /* Adjusted block size */
     size_t extendsize; /* Amount to extend heap if no fit */
     void *bp;
@@ -400,6 +407,7 @@ void *mm_malloc(size_t size)
  */
 void mm_free(void *ptr)
 {
+    printf("mm_free\n");
     if (ptr == NULL)
         return;
     
@@ -427,7 +435,7 @@ void *mm_realloc(void *ptr, size_t size)
 //    memcpy(newptr, oldptr, copySize);
 //    mm_free(oldptr);
 //    return newptr;
-    
+    printf("mm_realloc\n");
     size_t oldsize,newsize;
     void *newptr;
     if((int)size < 0)
