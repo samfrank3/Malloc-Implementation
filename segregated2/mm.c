@@ -77,13 +77,114 @@ team_t team = {
 #define GET_PREV(p)  (*(char **)(p + WSIZE))
 
 static char *heap_listp;
+/*
+7 Lists
+0-2
+2-4
+4-8
+8-16
+16-32
+32-64
+64-inf
+*/
 static char* free_listp;
 
+
 static void add_to_list(void* new){
-    GET_NEXT(new) = free_listp;
-    GET_PREV(free_listp) = new;
-    GET_PREV(new) = NULL;
-    free_listp = new;
+    size_t size = GET_SIZE(HDRP(new));
+    char **seg_p;
+    
+    if(size <= 2){
+        seg_p = free_listp + 0;
+        if(GET(seg_p) == (size_t) NULL){ //empty list
+            PUT(seg_p, (size_t) new);
+            PUT(GET_NEXT(size_t), (size_t) NULL);
+            PUT(GET_PREV(size_t), (size_t) seg_p);
+        }else{ //item(s) in list
+            PUT(GET_NEXT(new), GET(seg_p));
+            PUT(GET_PREV(new), (size_t) seg_p);
+            PUT(GET_PREV(GET(seg_p)), (size_t) new);
+            PUT(seg_p, (size_t) new);
+        }
+    }else if(size <= 4){
+        seg_p = free_listp + 1;
+        if(GET(seg_p) == (size_t) NULL){ //empty list
+            PUT(seg_p, (size_t) new);
+            PUT(GET_NEXT(size_t), (size_t) NULL);
+            PUT(GET_PREV(size_t), (size_t) seg_p);
+        }else{ //item(s) in list
+            PUT(GET_NEXT(new), GET(seg_p));
+            PUT(GET_PREV(new), (size_t) seg_p);
+            PUT(GET_PREV(GET(seg_p)), (size_t) new);
+            PUT(seg_p, (size_t) new);
+        }
+    }else if(size <= 8){
+        seg_p = free_listp + 2;
+        if(GET(seg_p) == (size_t) NULL){ //empty list
+            PUT(seg_p, (size_t) new);
+            PUT(GET_NEXT(size_t), (size_t) NULL);
+            PUT(GET_PREV(size_t), (size_t) seg_p);
+        }else{ //item(s) in list
+            PUT(GET_NEXT(new), GET(seg_p));
+            PUT(GET_PREV(new), (size_t) seg_p);
+            PUT(GET_PREV(GET(seg_p)), (size_t) new);
+            PUT(seg_p, (size_t) new);
+        }
+    }else if(size <= 16){
+        seg_p = free_listp + 3;
+        if(GET(seg_p) == (size_t) NULL){ //empty list
+            PUT(seg_p, (size_t) new);
+            PUT(GET_NEXT(size_t), (size_t) NULL);
+            PUT(GET_PREV(size_t), (size_t) seg_p);
+        }else{ //item(s) in list
+            PUT(GET_NEXT(new), GET(seg_p));
+            PUT(GET_PREV(new), (size_t) seg_p);
+            PUT(GET_PREV(GET(seg_p)), (size_t) new);
+            PUT(seg_p, (size_t) new);
+        }
+    }else if(size <= 32){
+        seg_p = free_listp + 4;
+        if(GET(seg_p) == (size_t) NULL){ //empty list
+            PUT(seg_p, (size_t) new);
+            PUT(GET_NEXT(size_t), (size_t) NULL);
+            PUT(GET_PREV(size_t), (size_t) seg_p);
+        }else{ //item(s) in list
+            PUT(GET_NEXT(new), GET(seg_p));
+            PUT(GET_PREV(new), (size_t) seg_p);
+            PUT(GET_PREV(GET(seg_p)), (size_t) new);
+            PUT(seg_p, (size_t) new);
+        }
+    }else if(size <= 64){
+        seg_p = free_listp + 5;
+        if(GET(seg_p) == (size_t) NULL){ //empty list
+            PUT(seg_p, (size_t) new);
+            PUT(GET_NEXT(size_t), (size_t) NULL);
+            PUT(GET_PREV(size_t), (size_t) seg_p);
+        }else{ //item(s) in list
+            PUT(GET_NEXT(new), GET(seg_p));
+            PUT(GET_PREV(new), (size_t) seg_p);
+            PUT(GET_PREV(GET(seg_p)), (size_t) new);
+            PUT(seg_p, (size_t) new);
+        }
+    }else{
+        seg_p = free_listp + 6;
+        if(GET(seg_p) == (size_t) NULL){ //empty list
+            PUT(seg_p, (size_t) new);
+            PUT(GET_NEXT(size_t), (size_t) NULL);
+            PUT(GET_PREV(size_t), (size_t) seg_p);
+        }else{ //item(s) in list
+            PUT(GET_NEXT(new), GET(seg_p));
+            PUT(GET_PREV(new), (size_t) seg_p);
+            PUT(GET_PREV(GET(seg_p)), (size_t) new);
+            PUT(seg_p, (size_t) new);
+        }
+    }
+    
+//     explicit list code 
+//     GET_NEXT(new) = free_listp;
+//     GET_PREV(free_listp) = new;
+//     GET_PREV(new) = NULL;
+//     free_listp = new;
 }
 
 static void fill_block(void* current){
