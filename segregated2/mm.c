@@ -145,30 +145,57 @@ static void add_to_list(void* new){
 }
 
 static void fill_block(void* current){
-    size_t size = GET_SIZE(HDRP(new));
-    char **seg_p;
+    size_t size = GET_SIZE(HDRP(current));
     
     if(size <= 2){
-        seg_p = free_listp1;
-        if(GET_PREV(current) == NULL){ //if is head
-            seg_p = GET_NEXT(current);
+        if(GET_PREV(current)==NULL){
+            free_listp1 = GET_NEXT(current);
         }else{
-            
+            GET_NEXT(GET_PREV(current))=GET_NEXT(current);
         }
-        
-        free_listp = seg_p;
+        GET_PREV(GET_NEXT(current))=GET_PREV(current);
     }else if(size <= 4){
-        
+        if(GET_PREV(current)==NULL){
+            free_listp2 = GET_NEXT(current);
+        }else{
+            GET_NEXT(GET_PREV(current))=GET_NEXT(current);
+        }
+        GET_PREV(GET_NEXT(current))=GET_PREV(current);
     }else if(size <= 8){
-        
+        if(GET_PREV(current)==NULL){
+            free_listp3 = GET_NEXT(current);
+        }else{
+            GET_NEXT(GET_PREV(current))=GET_NEXT(current);
+        }
+        GET_PREV(GET_NEXT(current))=GET_PREV(current);   
     }else if(size <= 16){
-        
+        if(GET_PREV(current)==NULL){
+            free_listp4 = GET_NEXT(current);
+        }else{
+            GET_NEXT(GET_PREV(current))=GET_NEXT(current);
+        }
+        GET_PREV(GET_NEXT(current))=GET_PREV(current);   
     }else if(size <= 32){
-        
+        if(GET_PREV(current)==NULL){
+            free_listp5 = GET_NEXT(current);
+        }else{
+            GET_NEXT(GET_PREV(current))=GET_NEXT(current);
+        }
+        GET_PREV(GET_NEXT(current))=GET_PREV(current);  
     }else if(size <= 64){
-        
+       if(GET_PREV(current)==NULL){
+            free_listp6 = GET_NEXT(current);
+        }else{
+            GET_NEXT(GET_PREV(current))=GET_NEXT(current);
+        }
+        GET_PREV(GET_NEXT(current))=GET_PREV(current); 
     }else{
-        
+       if(GET_PREV(current)==NULL){
+            free_listp7 = GET_NEXT(current);
+        }else{
+            GET_NEXT(GET_PREV(current))=GET_NEXT(current);
+        }
+        GET_PREV(GET_NEXT(current))=GET_PREV(current); 
     }
 //     explicit lsit code 
 //     if(GET_PREV(current)==NULL){
