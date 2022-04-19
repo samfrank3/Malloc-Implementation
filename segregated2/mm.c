@@ -87,30 +87,54 @@ static char *heap_listp;
 32-64
 64-inf
 */
-static char **free_listp;
+static char *free_listp1;
+static char *free_listp2;
+static char *free_listp3;
+static char *free_listp4;
+static char *free_listp5;
+static char *free_listp6;
+static char *free_listp7;
+
 
 
 static void add_to_list(void* new){
     size_t size = GET_SIZE(HDRP(new));
-    char **seg_p;
     
     if(size <= 2){
-        GET_NEXT(new) = free_listp + 0; 
-        GET_PREV(free_listp + 0) = new;
+        GET_NEXT(new) = free_listp1; 
+        GET_PREV(free_listp1) = new;
         GET_PREV(new) = NULL;
-        &(free_listp + 0) = new; 
+        free_listp1 = new; 
     }else if(size <= 4){
-        
+        GET_NEXT(new) = free_listp2; 
+        GET_PREV(free_listp2) = new;
+        GET_PREV(new) = NULL;
+        free_listp2 = new;  
     }else if(size <= 8){
-        
+        GET_NEXT(new) = free_listp3; 
+        GET_PREV(free_listp3) = new;
+        GET_PREV(new) = NULL;
+        free_listp3 = new;  
     }else if(size <= 16){
-        
+        GET_NEXT(new) = free_listp4; 
+        GET_PREV(free_listp4) = new;
+        GET_PREV(new) = NULL;
+        free_listp4 = new; 
     }else if(size <= 32){
-        
+        GET_NEXT(new) = free_listp5; 
+        GET_PREV(free_listp5) = new;
+        GET_PREV(new) = NULL;
+        free_listp5 = new; 
     }else if(size <= 64){
-        
+        GET_NEXT(new) = free_listp6; 
+        GET_PREV(free_listp6) = new;
+        GET_PREV(new) = NULL;
+        free_listp6 = new; 
     }else{
-        
+        GET_NEXT(new) = free_listp7; 
+        GET_PREV(free_listp7) = new;
+        GET_PREV(new) = NULL;
+        free_listp7 = new; 
     }
     
 //     explicit list code
@@ -125,7 +149,7 @@ static void fill_block(void* current){
     char **seg_p;
     
     if(size <= 2){
-        seg_p = free_listp + 0;
+        seg_p = free_listp1;
         if(GET_PREV(current) == NULL){ //if is head
             seg_p = GET_NEXT(current);
         }else{
