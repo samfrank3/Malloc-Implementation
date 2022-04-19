@@ -95,89 +95,22 @@ static void add_to_list(void* new){
     char **seg_p;
     
     if(size <= 2){
-        seg_p = free_listp + 0;
-        if(GET(seg_p) == (size_t) NULL){ //empty list
-            PUT(seg_p, (size_t) new);
-            PUT(GET_NEXT(new), (size_t) NULL);
-            PUT(GET_PREV(new), (size_t) seg_p);
-        }else{ //item(s) in list
-            PUT(GET_NEXT(new), GET(seg_p));
-            PUT(GET_PREV(new), (size_t) seg_p);
-            PUT(GET_PREV(GET(seg_p)), (size_t) new);
-            PUT(seg_p, (size_t) new);
-        }
+        GET_NEXT(new) = free_listp + 0; 
+        GET_PREV(free_listp + 0) = new;
+        GET_PREV(new) = NULL;
+        &(free_listp + 0) = new; 
     }else if(size <= 4){
-        seg_p = free_listp + 1;
-        if(GET(seg_p) == (size_t) NULL){ //empty list
-            PUT(seg_p, (size_t) new);
-            PUT(GET_NEXT(new), (size_t) NULL);
-            PUT(GET_PREV(new), (size_t) seg_p);
-        }else{ //item(s) in list
-            PUT(GET_NEXT(new), GET(seg_p));
-            PUT(GET_PREV(new), (size_t) seg_p);
-            PUT(GET_PREV(GET(seg_p)), (size_t) new);
-            PUT(seg_p, (size_t) new);
-        }
+        
     }else if(size <= 8){
-        seg_p = free_listp + 2;
-        if(GET(seg_p) == (size_t) NULL){ //empty list
-            PUT(seg_p, (size_t) new);
-            PUT(GET_NEXT(new), (size_t) NULL);
-            PUT(GET_PREV(new), (size_t) seg_p);
-        }else{ //item(s) in list
-            PUT(GET_NEXT(new), GET(seg_p));
-            PUT(GET_PREV(new), (size_t) seg_p);
-            PUT(GET_PREV(GET(seg_p)), (size_t) new);
-            PUT(seg_p, (size_t) new);
-        }
+        
     }else if(size <= 16){
-        seg_p = free_listp + 3;
-        if(GET(seg_p) == (size_t) NULL){ //empty list
-            PUT(seg_p, (size_t) new);
-            PUT(GET_NEXT(new), (size_t) NULL);
-            PUT(GET_PREV(new), (size_t) seg_p);
-        }else{ //item(s) in list
-            PUT(GET_NEXT(new), GET(seg_p));
-            PUT(GET_PREV(new), (size_t) seg_p);
-            PUT(GET_PREV(GET(seg_p)), (size_t) new);
-            PUT(seg_p, (size_t) new);
-        }
+        
     }else if(size <= 32){
-        seg_p = free_listp + 4;
-        if(GET(seg_p) == (size_t) NULL){ //empty list
-            PUT(seg_p, (size_t) new);
-            PUT(GET_NEXT(new), (size_t) NULL);
-            PUT(GET_PREV(new), (size_t) seg_p);
-        }else{ //item(s) in list
-            PUT(GET_NEXT(new), GET(seg_p));
-            PUT(GET_PREV(new), (size_t) seg_p);
-            PUT(GET_PREV(GET(seg_p)), (size_t) new);
-            PUT(seg_p, (size_t) new);
-        }
+        
     }else if(size <= 64){
-        seg_p = free_listp + 5;
-        if(GET(seg_p) == (size_t) NULL){ //empty list
-            PUT(seg_p, (size_t) new);
-            PUT(GET_NEXT(new), (size_t) NULL);
-            PUT(GET_PREV(new), (size_t) seg_p);
-        }else{ //item(s) in list
-            PUT(GET_NEXT(new), GET(seg_p));
-            PUT(GET_PREV(new), (size_t) seg_p);
-            PUT(GET_PREV(GET(seg_p)), (size_t) new);
-            PUT(seg_p, (size_t) new);
-        }
+        
     }else{
-        seg_p = free_listp + 6;
-        if(GET(seg_p) == (size_t) NULL){ //empty list
-            PUT(seg_p, (size_t) new);
-            PUT(GET_NEXT(new), (size_t) NULL);
-            PUT(GET_PREV(new), (size_t) seg_p);
-        }else{ //item(s) in list
-            PUT(GET_NEXT(new), GET(seg_p));
-            PUT(GET_PREV(new), (size_t) seg_p);
-            PUT(GET_PREV(GET(seg_p)), (size_t) new);
-            PUT(seg_p, (size_t) new);
-        }
+        
     }
     
 //     explicit list code
@@ -188,12 +121,38 @@ static void add_to_list(void* new){
 }
 
 static void fill_block(void* current){
-    if(GET_PREV(current)==NULL){
-        free_listp = GET_NEXT(current);
+    size_t size = GET_SIZE(HDRP(new));
+    char **seg_p;
+    
+    if(size <= 2){
+        seg_p = free_listp + 0;
+        if(GET_PREV(current) == NULL){ //if is head
+            seg_p = GET_NEXT(current);
+        }else{
+            
+        }
+        
+        free_listp = seg_p;
+    }else if(size <= 4){
+        
+    }else if(size <= 8){
+        
+    }else if(size <= 16){
+        
+    }else if(size <= 32){
+        
+    }else if(size <= 64){
+        
     }else{
-        GET_NEXT(GET_PREV(current))=GET_NEXT(current);
+        
     }
-    GET_PREV(GET_NEXT(current))=GET_PREV(current);
+//     explicit lsit code 
+//     if(GET_PREV(current)==NULL){
+//         free_listp = GET_NEXT(current);
+//     }else{
+//         GET_NEXT(GET_PREV(current))=GET_NEXT(current);
+//     }
+//     GET_PREV(GET_NEXT(current))=GET_PREV(current);
 }
 
 static void *find_first_fit(size_t asize)
