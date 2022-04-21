@@ -67,18 +67,18 @@ team_t team = {
 #define GET_PREV(p)  ((char *)(p + WSIZE))
 
 /* GET SEGREGATED LIST NEXT AND PREV BLOCKS */
-#define SEG_GET_NEXT_BLKP(bp) GET(bp)
-#define SEG_GET_PREV_BLKP(bp) GET(GET_PREV(bp))
+#define SEG_GET_NEXT(bp) GET(bp)
+#define SEG_GET_PREV(bp) GET(GET_PREV(bp))
 
 /* SET SEGREGATED LIST NEXT AND PREV BLOCKS for a block with block pointer bp */
-#define SEG_SET_NEXT_BLKP(bp, next_block_ptr) PUT(bp, next_block_ptr)
-#define SEG_SET_PREV_BLKP(bp, prev_block_ptr) PUT(GET_PREV(bp), prev_block_ptr)
+#define SEG_SET_NEXT(bp, next_block_ptr) PUT(bp, next_block_ptr)
+#define SEG_SET_PREV(bp, prev_block_ptr) PUT(GET_PREV(bp), prev_block_ptr)
 
 /* Global variables: */
 static char *heap_listp; /* Pointer to first block */
 
 /* Added Global variables: */
-size_t seg_count = 20;
+size_t num_buckets = 20;
 static char** seg_p;
 
 
@@ -87,7 +87,7 @@ static char** seg_p;
 
 
 /* Give an index of the list from an array based on power of 2*/
-static int list_number(size_t size){
+static int get_index(size_t size){
         if (size > 16384) //based off of 2^14
             return 9;
         else if (size > 8192) //based off of 2^13
@@ -112,42 +112,42 @@ static int list_number(size_t size){
 
 /* Add newly freed block pointer to the segregated list of appropriate size */
 static void add_to_list(void *new){
-    size_t listnum = list_number(GET_SIZE(HDRP(new)));     // Get appropriate sized list for newly freed block to be placed in
+    size_t index = get_index(GET_SIZE(HDRP(new)));     // Get appropriate sized list for newly freed block to be placed in
     
     /* Organizes the newly freed block and 'sets' as head */
-    SEG_SET_NEXT_BLKP(new, (size_t) seg_p[listnum]);     // Places newly freed block in the beginning of the list
-    SEG_SET_PREV_BLKP(new, (size_t) NULL);              // Sets the previous pointer to NULL
+    SEG_SET_NEXT(new, (size_t) seg_p[index]);     // Places newly freed block in the beginning of the list
+    SEG_SET_PREV(new, (size_t) NULL);              // Sets the previous pointer to NULL
 
     /* Adds the newly freed block into a non-empty list*/
-    if (seg_p[listnum] != NULL){
-        SEG_SET_PREV_BLKP(seg_p[listnum], (size_t) new);
+    if (seg_p[index] != NULL){
+        SEG_SET_PREV(seg_p[index], (size_t) new);
     }
-    seg_p[listnum] = new; //places the newly freed block pointer as head of list
+    seg_p[index] = new; //places the newly freed block pointer as head of list
     return;
 }
 
 /* Remove newly filled (free) block from the segregated list of free blocks*/
 static void fill_block(void *current){
 
-    int id = list_number(GET_SIZE(HDRP(current)));   // Get appropriate sized list for newly freed block to be removed
+    int id = get_index(GET_SIZE(HDRP(current)));   // Get appropriate sized list for newly freed block to be removed
 
     /* Checks to see if the current free block is not the head of its segregated list*/
-    if (SEG_GET_PREV_BLKP(current) != (size_t) NULL){ //If not head
-            SEG_SET_NEXT_BLKP(SEG_GET_PREV_BLKP(current),SEG_GET_NEXT_BLKP(current)); //Sets the previous block's next pointer to current's next block
+    if (SEG_GET_PREV(current) != (size_t) NULL){ //If not head
+            SEG_SET_NEXT(SEG_GET_PREV(current),SEG_GET_NEXT(current)); //Sets the previous block's next pointer to current's next block
     }
     else{
-        seg_p[id] = (char*) SEG_GET_NEXT_BLKP(current); //If head
+        seg_p[id] = (char*) SEG_GET_NEXT(current); //If head
     }
 
     /* Checks to see if the current free block is not the tail of its segregated lists*/
-    if (SEG_GET_NEXT_BLKP(current) != (size_t) NULL){ //If not tail
-            SEG_SET_PREV_BLKP(SEG_GET_NEXT_BLKP(current), SEG_GET_PREV_BLKP(current)); //Sets the next block's previous pointer to current's previous block
+    if (SEG_GET_NEXT(current) != (size_t) NULL){ //If not tail
+            SEG_SET_PREV(SEG_GET_NEXT(current), SEG_GET_PREV(current)); //Sets the next block's previous pointer to current's previous block
     }
     return;
 }
 
 /* Coalesce Function to help reduce fragmentation for segmentation implementation*/
-static void *coalesce_seg(void *bp){
+static void *coalesce(void *bp){
     /* Case 1 : previous and next allocated*/
     if (GET_ALLOC(FTRP(PREV_BLKP(bp))) && GET_ALLOC(HDRP(NEXT_BLKP(bp)))) {
         add_to_list(bp);                               // Add to free list
@@ -301,25 +301,25 @@ static void place(void *bp, size_t asize, int heapExtended)
 
 /* Adopted the best fit policy for finding a free block */
 static void *segregated_best_fit(size_t asize){
-    size_t min_diff = 9999999; //different between the sizes, init really large
+    size_t min = 9999999; //different between the sizes, init really large
     void *bestfit = NULL; //pointer for best fit block
         
     /* Searching segregated lists whose block size is greater than or equal to the asize */
     int i;
-    int id = list_number(asize);
-    for (i = id; i < seg_count; i++) {
+    int id = get_index(asize);
+    for (i = id; i < num_buckets; i++) {
         void *bp = seg_p[i];
             while (bp != NULL) {                          //goes through the linked list of each segregated free lists
-                size_t curr_size = GET_SIZE(HDRP(bp));
-                if (!GET_ALLOC(HDRP(bp)) && (asize <= curr_size)) {
-                    size_t diff = curr_size;
+                size_t csize = GET_SIZE(HDRP(bp));
+                if (!GET_ALLOC(HDRP(bp)) && (asize <= csize)) {
+                    size_t diff = csize;
                     /*finds best fit from the list by finding the minimum difference*/
-                    if (diff < min_diff) {
-                        min_diff = diff;
+                    if (diff < min) {
+                        min = diff;
                         bestfit = bp;
                     }
                 }
-                bp = (void*) SEG_GET_NEXT_BLKP(bp); //iterate to next pointer within the segregated list
+                bp = (void*) SEG_GET_NEXT(bp); //iterate to next pointer within the segregated list
             }
         
         /*if we get a fit in the list, no need to check other lists of higher sizes.*/
@@ -333,7 +333,7 @@ static void *segregated_best_fit(size_t asize){
  * mm_init - initialize the malloc package.
  */
 int mm_init(void){
-    if((seg_p = mem_sbrk(seg_count*WSIZE)) == (void *)-1)  /*allocate space for segregated list in heap*/
+    if((seg_p = mem_sbrk(num_buckets*WSIZE)) == (void *)-1)  /*allocate space for segregated list in heap*/
         return (-1);
     
     /* Create the initial empty heap. */
@@ -346,7 +346,7 @@ int mm_init(void){
     heap_listp += (2 * WSIZE);
     /* Initializes the the segregated list to NULL*/
     int i;
-    for (i = 0; i < seg_count; i++)
+    for (i = 0; i < num_buckets; i++)
         seg_p[i] = NULL;
 
     return (0);
@@ -399,7 +399,7 @@ void mm_free(void *bp){
     size = GET_SIZE(HDRP(bp));
     PUT(HDRP(bp), PACK(size, 0));
     PUT(FTRP(bp), PACK(size, 0));
-    coalesce_seg(bp);
+    coalesce(bp);
 }
 
 /*
@@ -427,8 +427,8 @@ void *mm_realloc(void *ptr, size_t size){
 
     /*If the realloc'd block has previously been given more size than it needs, perhaps
         this realloc request can be serviced within the same block:*/
-    size_t curSize = GET_SIZE(HDRP(ptr));
-    if (size < curSize-2*WSIZE) {
+    size_t csize = GET_SIZE(HDRP(ptr));
+    if (size < csize-2*WSIZE) {
         return ptr;
     }
 
