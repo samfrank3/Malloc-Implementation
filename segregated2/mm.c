@@ -63,62 +63,103 @@ team_t team = {
 #define NEXT_BLKP(bp)  ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE)))
 #define PREV_BLKP(bp)  ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))
 
+
+#define GET_NEXT(p)  (*(char **)(p))
+#define GET_PREV(p)  ((char *)(p + WSIZE))
+
+#define SEG_GET_NEXT(bp) GET(bp)
+#define SEG_GET_PREV(bp) GET(GET_PREV(bp))
+
+#define SEG_SET_NEXT(bp, next_block_ptr) PUT(bp, next_block_ptr)
+#define SEG_SET_PREV(bp, prev_block_ptr) PUT(GET_PREV(bp), prev_block_ptr)
+
 /* Global variables: */
 static char *heap_listp; /* Pointer to first block */
 
 /* Added Global variables: */
-size_t seg_count = 20;
+size_t seg_count = 16;
+static char** tiny_p;
+static char** big_p;
 static char** seg_p;
 
 
-/* Defining additional macros for segregated list */
 
-/* GET SEGREGATED LIST NEXT AND PREV BLOCKS */
-#define SEG_GET_NEXT_BLKP(bp) GET(bp)
-#define SEG_GET_PREV_BLKP(bp) GET((char *)(bp)+WSIZE)
 
-/* SET SEGREGATED LIST NEXT AND PREV BLOCKS for a block with block pointer bp */
-#define SEG_SET_NEXT_BLKP(bp, next_block_ptr) PUT(bp, next_block_ptr)
-#define SEG_SET_PREV_BLKP(bp, prev_block_ptr) PUT((char *)(bp)+WSIZE, prev_block_ptr)
+
 
 /* Give an index of the list from an array based on power of 2*/
 static int list_number(size_t size){
-        if (size > 16384) //based off of 2^14
-            return 9;
-        else if (size > 8192) //based off of 2^13
-            return 8;
-        else if (size > 4096) //based off of 2^12
-            return 7;
-        else if (size > 2048) //based off of 2^11
-            return 6;
-        else if (size > 1024) //based off of 2^10
-            return 5;
-        else if (size > 512) //based off of 2^9
-            return 4;
-        else if (size > 256) //based off of 2^8
-            return 3;
-        else if (size > 128) //based off of 2^7
-            return 2;
-        else if (size > 64) //this is based off of 2^6
-            return 1;
-        else
-            return 0; //this is less than 2^6
+    if(size > 16384){
+        return 15
+    }else if(size > 8192){
+        return 14;
+    }else if(size > 4096){
+        return 13
+    }else if(size > 2048){
+        return 12;
+    }else if(size > 1024){
+        return 11;
+    }else if(size > 512){
+        return 10;
+    }else if(size > 256){
+        return 9;
+    }else if(size > 128){
+        return 8;
+    }else if(size > 64){
+        return 7;
+    }else if(size > 32){
+        return 6;
+    }else if(size > 16){
+        return 5;
+    }else if(size > 8){
+        return 4;
+    }else if(size > 4){
+        return 3;
+    }else if(size > 3){
+        return 2;
+    }else if(size > 2){
+        return 1;
+    }else{
+        return 0;
+    }
 }
 
 /* Add newly freed block pointer to the segregated list of appropriate size */
 static void add_to_list(void *new){
-    size_t listnum = list_number(GET_SIZE(HDRP(new)));     // Get appropriate sized list for newly freed block to be placed in
+    size_t index = list_number(GET_SIZE(HDRP(new)));
     
-    /* Organizes the newly freed block and 'sets' as head */
-    SEG_SET_NEXT_BLKP(new, (size_t) seg_p[listnum]);     // Places newly freed block in the beginning of the list
-    SEG_SET_PREV_BLKP(new, (size_t) NULL);              // Sets the previous pointer to NULL
-
-    /* Adds the newly freed block into a non-empty list*/
-    if (seg_p[listnum] != NULL){
-        SEG_SET_PREV_BLKP(seg_p[listnum], (size_t) new);
+    if(listnum > 7){
+        SEG_SET_NEXT(new, (size_t) tiny_p[index]);
+        SEG_SET_PREV(new, (size_t) NULL);
+        
+        if(tiny_p[index] != NULL){
+            SEG_SET_PREV(tiny_p[index], (size_t) new);   
+        }
+        
+        tiny_p[index] = new;
+    }else{
+        SEG_SET_NEXT(new, (size_t) big_p[index]);
+        SEG_SET_PREV(new, (size_t) NULL);
+        
+        if(big_p[index] != NULL){
+            SEG_SET_PREV(big_p[index], (size_t) new);   
+        }
+        
+        big_p[index] = new;
     }
-    seg_p[listnum] = new; //places the newly freed block pointer as head of list
-    return;
+    
+//     size_t listnum = list_number(GET_SIZE(HDRP(new)));// Get appropriate sized list for newly freed block to be placed in
+    
+//     /* Organizes the newly freed block and 'sets' as head */
+//     SEG_SET_NEXT_BLKP(new, (size_t) seg_p[listnum]);     // Places newly freed block in the beginning of the list
+//     SEG_SET_PREV_BLKP(new, (size_t) NULL);              // Sets the previous pointer to NULL
+
+//     /* Adds the newly freed block into a non-empty list*/
+//     if (seg_p[listnum] != NULL){
+//         SEG_SET_PREV_BLKP(seg_p[listnum], (size_t) new);
+//     }
+//     seg_p[listnum] = new; //places the newly freed block pointer as head of list
+//     return;
 }
 
 /* Remove newly filled (free) block from the segregated list of free blocks*/
