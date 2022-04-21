@@ -455,7 +455,8 @@ void mm_free(void *bp){
 void *mm_realloc(void *ptr, size_t size){
     size_t oldsize;
     void *newptr;
-    size_t new_size = size;
+    size_t aligned_size;
+    
 
     /* If size == 0 , free the block. */
     if (size == 0){
@@ -473,8 +474,37 @@ void *mm_realloc(void *ptr, size_t size){
         return ptr;
     }
  
-
+    if(size > DSIZE){
+       aligned_size = ALIGN(size+DSIZE);
+    }else{
+       aligned_size = 2 * DSIZE; 
+    }
+ 
+    aligned_size += (1<<7);
+ 
+    blocks = GET_SIZE(HDRP(ptr)) - algined_size; 
+    
+ 
+    if(blocks < 0){
+       void *next = NEXT_BLKP(ptr);
+       size_t next_alloc = GET_ALLOC(HDRP(next));
+       if(!next_alloc || !GET_SIZE(HDRP(next))){
+          size_t csize = GET_SIZE(HDRP(next)) + GET_SIZE(HDRP(ptr)) - aligned_size;
+          size_t extension;
+          if(coalesce_size < 0){
+             extension = MAX(-csize, CHUNKSIZE);
+             csize += extension;
+             if(extend_heap(extension) == NULL){
+                 return NULL;
+             }
+          }
+          fill_block(next);
+          
+       }else{
         
+       }
+    }
+ 
     /*If next block is not allocated, realloc request can be serviced by merging both blocks*/
     void *next = NEXT_BLKP(ptr);
     int next_alloc = GET_ALLOC(HDRP(next));
