@@ -84,6 +84,10 @@ team_t team = {
 /*SET AND GET REALLOC BIT*/
 #define GET_RALLOC(p) (GET(p) & 0x2)
 #define SET_RALLOC(p) (GET(p) | 0x2)
+#define REMOVE_RALLOC(p) (GET(p) &= ~0x2)
+
+#define PUT_RALLOC(p, val) (*(size_t *)(p) = (val) | GET_RALLOC(p)) 
+
 
 /* Global variables: */
 static char *heap_listp; /* Pointer to first block */
@@ -116,39 +120,19 @@ static int get_index(size_t size){
         return 7;
     }else if(size > 128){
         return 6;
-    }else if(size > 64){//5-8
+    }else if(size > 64){
         return 5;
-    }else if(size > 32){//4
+    }else if(size > 32){
         return 4;
-    }else if(size > 24){//3
+    }else if(size > 16){
         return 3;
-    }else if(size > 16){ //2
+    }else if(size > 8){
         return 2;
-    }else if(size > 8){//1 block
+    }else if(size > 4){
         return 1;
-    }else{
+    }else{//2
         return 0;
     }
-//         if (size > 16384) //based off of 2^14
-//             return 9;
-//         else if (size > 8192) //based off of 2^13
-//             return 8;
-//         else if (size > 4096) //based off of 2^12
-//             return 7;
-//         else if (size > 2048) //based off of 2^11
-//             return 6;
-//         else if (size > 1024) //based off of 2^10
-//             return 5;
-//         else if (size > 512) //based off of 2^9
-//             return 4;
-//         else if (size > 256) //based off of 2^8
-//             return 3;
-//         else if (size > 128) //based off of 2^7
-//             return 2;
-//         else if (size > 64) //this is based off of 2^6
-//             return 1;
-//         else if(size > 32)
-//             return 0; //this is less than 2^6
 }
 
 /* Add newly freed block pointer to the segregated list of appropriate size */
@@ -170,14 +154,14 @@ static void add_to_list(void *new){
 /* Remove newly filled (free) block from the segregated list of free blocks*/
 static void fill_block(void *current){
 
-    int id = get_index(GET_SIZE(HDRP(current)));   // Get appropriate sized list for newly freed block to be removed
+    int index = get_index(GET_SIZE(HDRP(current)));   // Get appropriate sized list for newly freed block to be removed
 
     /* Checks to see if the current free block is not the head of its segregated list*/
     if (SEG_GET_PREV(current) != (size_t) NULL){ //If not head
             SEG_SET_NEXT(SEG_GET_PREV(current),SEG_GET_NEXT(current)); //Sets the previous block's next pointer to current's next block
     }
     else{
-        seg_p[id] = (char*) SEG_GET_NEXT(current); //If head
+        seg_p[index] = (char*) SEG_GET_NEXT(current); //If head
     }
 
     /* Checks to see if the current free block is not the tail of its segregated lists*/
@@ -192,10 +176,14 @@ static void *coalesce(void *bp){
     size_t prev = GET_ALLOC(HDRP(PREV_BLKP(bp)));
     size_t next = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
 //    size_t size = GET_SIZE(HDRP(bp));
+    if(GET_RALLOC(HDRP(PREV_BLKP(bp))){
+       prev = 1;
+    }
     
     /* Case 1 : previous and next allocated*/
     if (prev && next) {
-        add_to_list(bp);                               // Add to free list
+        //add_to_list(bp); // Add to free list
+        return bp;
     }
 
     /* Case 2 : Next Block is Free*/
@@ -223,7 +211,7 @@ static void *coalesce(void *bp){
             PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
             bp = PREV_BLKP(bp);
         }
-        add_to_list(bp); //add combined block to free list
+//         add_to_list(bp); //add combined block to free list
     }
     /* Case 3: Previous Block is Free*/
     if (!prev && next) {
@@ -250,7 +238,7 @@ static void *coalesce(void *bp){
             PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
             bp = PREV_BLKP(bp);
         }
-        add_to_list(bp); //add combined free block to segmented free list
+//         add_to_list(bp); //add combined free block to segmented free list
     }
 
     /* Case 4: Next and Previous Blocks are Free*/
@@ -280,8 +268,9 @@ static void *coalesce(void *bp){
             PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
             bp = PREV_BLKP(bp);
         }
-        add_to_list(bp); //add combined free block to segmented free lists
+//         add_to_list(bp); //add combined free block to segmented free lists
     }
+    add_to_list(bp);
     return bp;
 }
 
@@ -305,43 +294,100 @@ static void *extend_heap(size_t words){
 }
 
 /* Places a block of size (asize) at the start of the free block bp */
-static void place(void *bp, size_t asize, int heapExtended)
-{
+static void place(void *bp, size_t asize, int heapExtended){
     size_t csize = GET_SIZE(HDRP(bp)); //Gets the current block size
-
-    if (heapExtended == 1) {                       //when heap is extended
-        /*if current block size is greater than the asize, splicing takes place */
-        if ((csize - asize) >= (2 * DSIZE)) {
-            PUT(HDRP(bp), PACK(asize, 1));
-            PUT(FTRP(bp), PACK(asize, 1));
-            /*splice block*/
-            bp = NEXT_BLKP(bp);
-            PUT(HDRP(bp), PACK(csize - asize, 0));
-            PUT(FTRP(bp), PACK(csize - asize, 0));
-            add_to_list(bp); //Put the newly spliced free block at front of the free list
-        } else {                    /*else no splicing, getting the whole block*/
-            PUT(HDRP(bp), PACK(csize, 1));
-            PUT(FTRP(bp), PACK(csize, 1));
-        }
+    //add_to_list(bp);
+    if ((csize - asize) >= (2 * DSIZE)) {
+        PUT(HDRP(bp), PACK(asize, 1));
+        PUT(FTRP(bp), PACK(asize, 1));
+        /*splice block*/
+        bp = NEXT_BLKP(bp);
+        PUT(HDRP(bp), PACK(csize - asize, 0));
+        PUT(FTRP(bp), PACK(csize - asize, 0));
+        add_to_list(bp); //Put the newly spliced free block at front of the free list
+     } else {                    /*else no splicing, getting the whole block*/
+        PUT_RALLOC(HDRP(bp), PACK(csize, 1));
+        PUT_RALLOC(FTRP(bp), PACK(csize, 1));
+        PUT(HDRP(NEXT_BLKP(bp)), PACK((csize-asize),0));
+        PUT(FTRP(NEXT_BLKP(bp)), PACK((csize-asize),0));
+        fill_block(NEXT_BLKP(bp), csize-asize);
+        
+//         PUT(HDRP(ptr), PACK(asize, 1)); 
+//         PUT(FTRP(ptr), PACK(asize, 1)); 
+//         PUT_NOTAG(HDRP(NEXT_BLKP(ptr)), PACK(remainder, 0)); 
+//         PUT_NOTAG(FTRP(NEXT_BLKP(ptr)), PACK(remainder, 0)); 
+//         insert_node(NEXT_BLKP(ptr), remainder);
+     }
+ 
+    /*
+    size_t ptr_size = GET_SIZE(HDRP(ptr));
+    size_t remainder = ptr_size - asize;
+    
+    delete_node(ptr);
+    
+    
+    if (remainder <= DSIZE * 2) {
+        // Do not split block 
+        PUT(HDRP(ptr), PACK(ptr_size, 1)); 
+        PUT(FTRP(ptr), PACK(ptr_size, 1)); 
     }
+    
+    else if (asize >= 100) {
+        // Split block
+        PUT(HDRP(ptr), PACK(remainder, 0));
+        PUT(FTRP(ptr), PACK(remainder, 0));
+        PUT_NOTAG(HDRP(NEXT_BLKP(ptr)), PACK(asize, 1));
+        PUT_NOTAG(FTRP(NEXT_BLKP(ptr)), PACK(asize, 1));
+        insert_node(ptr, remainder);
+        return NEXT_BLKP(ptr);
+        
+    }
+    
     else {
-        /*if current block size is greater than the asize, splicing takes place */
-        if ((csize - asize) >= (2 * DSIZE)) {
-            fill_block(bp); //removes the recently filled block from free list
-            PUT(HDRP(bp), PACK(asize, 1));
-            PUT(FTRP(bp), PACK(asize, 1));
-            /*splice block*/
-            bp = NEXT_BLKP(bp);
-            PUT(HDRP(bp), PACK(csize - asize, 0));
-            PUT(FTRP(bp), PACK(csize - asize, 0));
-            add_to_list(bp); //Put the newly spliced free block at front of the free list
-        } else {
-            /*else no splicing necessary, they are getting the whole block*/
-            PUT(HDRP(bp), PACK(csize, 1));
-            PUT(FTRP(bp), PACK(csize, 1));
-            fill_block(bp); //removes the recently filled block from free list
-        }
+        // Split block
+        PUT(HDRP(ptr), PACK(asize, 1)); 
+        PUT(FTRP(ptr), PACK(asize, 1)); 
+        PUT_NOTAG(HDRP(NEXT_BLKP(ptr)), PACK(remainder, 0)); 
+        PUT_NOTAG(FTRP(NEXT_BLKP(ptr)), PACK(remainder, 0)); 
+        insert_node(NEXT_BLKP(ptr), remainder);
     }
+    return ptr;
+    
+    */
+    
+//     if (heapExtended == 1) {                       //when heap is extended
+//         /*if current block size is greater than the asize, splicing takes place */
+//         if ((csize - asize) >= (2 * DSIZE)) {
+//             PUT(HDRP(bp), PACK(asize, 1));
+//             PUT(FTRP(bp), PACK(asize, 1));
+//             /*splice block*/
+//             bp = NEXT_BLKP(bp);
+//             PUT(HDRP(bp), PACK(csize - asize, 0));
+//             PUT(FTRP(bp), PACK(csize - asize, 0));
+//             add_to_list(bp); //Put the newly spliced free block at front of the free list
+//         } else {                    /*else no splicing, getting the whole block*/
+//             PUT(HDRP(bp), PACK(csize, 1));
+//             PUT(FTRP(bp), PACK(csize, 1));
+//         }
+//     }
+//     else {
+//         /*if current block size is greater than the asize, splicing takes place */
+//         if ((csize - asize) >= (2 * DSIZE)) {
+//             fill_block(bp); //removes the recently filled block from free list
+//             PUT(HDRP(bp), PACK(asize, 1));
+//             PUT(FTRP(bp), PACK(asize, 1));
+//             /*splice block*/
+//             bp = NEXT_BLKP(bp);
+//             PUT(HDRP(bp), PACK(csize - asize, 0));
+//             PUT(FTRP(bp), PACK(csize - asize, 0));
+//             add_to_list(bp); //Put the newly spliced free block at front of the free list
+//         } else {
+//             /*else no splicing necessary, they are getting the whole block*/
+//             PUT(HDRP(bp), PACK(csize, 1));
+//             PUT(FTRP(bp), PACK(csize, 1));
+//             fill_block(bp); //removes the recently filled block from free list
+//         }
+//     }
 }
 
 /* Adopted the best fit policy for finding a free block */
@@ -351,8 +397,8 @@ static void *segregated_best_fit(size_t asize){
         
     /* Searching segregated lists whose block size is greater than or equal to the asize */
     int i;
-    int id = get_index(asize);
-    for (i = id; i < num_buckets; i++) {
+    int index = get_index(asize);
+    for (i = index; i < num_buckets; i++) {
         void *bp = seg_p[i];
             while (bp != NULL) {                          //goes through the linked list of each segregated free lists
                 size_t csize = GET_SIZE(HDRP(bp));
@@ -410,10 +456,11 @@ void * mm_malloc(size_t size){
     if (size == 0)
         return (NULL);
 
-    if (size <= DSIZE)
+    if (size <= DSIZE){
         asize = 2 * DSIZE;
-    else
-        asize = DSIZE * ((size + DSIZE + (DSIZE - 1)) / DSIZE);
+    }else{
+        asize = ALIGN(size+DSIZE);
+    }
 
     /* Search the free list for a fit with the best fit policy */
     if ((bp = segregated_best_fit(asize)) != NULL) {
