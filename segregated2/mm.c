@@ -78,7 +78,7 @@ team_t team = {
 static char *heap_listp; /* Pointer to first block */
 
 /* Added Global variables: */
-size_t num_buckets = 20;
+size_t num_buckets = 14;
 static char** seg_p;
 
 
@@ -88,26 +88,55 @@ static char** seg_p;
 
 /* Give an index of the list from an array based on power of 2*/
 static int get_index(size_t size){
-        if (size > 16384) //based off of 2^14
-            return 9;
-        else if (size > 8192) //based off of 2^13
-            return 8;
-        else if (size > 4096) //based off of 2^12
-            return 7;
-        else if (size > 2048) //based off of 2^11
-            return 6;
-        else if (size > 1024) //based off of 2^10
-            return 5;
-        else if (size > 512) //based off of 2^9
-            return 4;
-        else if (size > 256) //based off of 2^8
-            return 3;
-        else if (size > 128) //based off of 2^7
-            return 2;
-        else if (size > 64) //this is based off of 2^6
-            return 1;
-        else
-            return 0; //this is less than 2^6
+    if(size > 32768){
+        return 13;
+    }else if(size > 16384){
+        return 12;
+    }else if(size > 8192){
+        return 11;
+    }else if(size > 4096){
+        return 10;
+    }else if(size > 2048){
+        return 9;
+    }else if(size > 1024){
+        return 8;
+    }else if(size > 512){
+        return 7;
+    }else if(size > 256){
+        return 6;
+    }else if(size > 128){
+        return 5;
+    }else if(size > 64){//5-8
+        return 4; 
+    }else if(size > 32){//4
+        return 3;
+    }else if(size > 24){//3
+        return 2;
+    }else if(size > 16){ //2
+        return 1;
+    }else if(size <= 8){//1 block
+        return 0;
+    }
+//         if (size > 16384) //based off of 2^14
+//             return 9;
+//         else if (size > 8192) //based off of 2^13
+//             return 8;
+//         else if (size > 4096) //based off of 2^12
+//             return 7;
+//         else if (size > 2048) //based off of 2^11
+//             return 6;
+//         else if (size > 1024) //based off of 2^10
+//             return 5;
+//         else if (size > 512) //based off of 2^9
+//             return 4;
+//         else if (size > 256) //based off of 2^8
+//             return 3;
+//         else if (size > 128) //based off of 2^7
+//             return 2;
+//         else if (size > 64) //this is based off of 2^6
+//             return 1;
+//         else if(size > 32)
+//             return 0; //this is less than 2^6
 }
 
 /* Add newly freed block pointer to the segregated list of appropriate size */
