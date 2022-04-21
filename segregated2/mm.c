@@ -34,6 +34,13 @@ team_t team = {
     "sfrank8@u.rochester.edu"
 };
 /* pg 857 of the textbook */
+
+/* single word (4) or double word (8) alignment */
+#define ALIGNMENT 8
+
+/* rounds up to the nearest multiple of ALIGNMENT */
+#define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~0x7)
+
 /* Basic constants and macros */
 #define WSIZE      sizeof(void *) /* Word and header/footer size (bytes) */
 #define DSIZE      (2 * WSIZE)    /* Doubleword size (bytes), also works for the overhead of the header and footer cuz its a byte */
@@ -477,12 +484,12 @@ void *mm_realloc(void *ptr, size_t size){
     if(size > DSIZE){
        aligned_size = ALIGN(size+DSIZE);
     }else{
-       aligned_size = 2 * DSIZE; 
+       aligned_size = 2 * DSIZE;
     }
  
     aligned_size += (1<<7);
  
-    blocks = GET_SIZE(HDRP(ptr)) - algined_size; 
+    size_t blocks = GET_SIZE(HDRP(ptr)) - aligned_size;
     
  
     if(blocks < 0){
@@ -491,7 +498,7 @@ void *mm_realloc(void *ptr, size_t size){
        if(!next_alloc || !GET_SIZE(HDRP(next))){
           size_t csize = GET_SIZE(HDRP(next)) + GET_SIZE(HDRP(ptr)) - aligned_size;
           size_t extension;
-          if(coalesce_size < 0){
+          if(csize < 0){
              extension = MAX(-csize, CHUNKSIZE);
              csize += extension;
              if(extend_heap(extension) == NULL){
