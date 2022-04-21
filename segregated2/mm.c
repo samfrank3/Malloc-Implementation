@@ -506,41 +506,50 @@ void *mm_realloc(void *ptr, size_t size){
              }
           }
           fill_block(next);
-          
+          PUT(HDRP(ptr), PACK(aligned_size + csize, 1));
+          PUT(FTRP(ptr), PACK(aligned_size + csize, 1));
        }else{
-        
+          newptr = mm_malloc(aligned_size - DSIZE);
+          memcpy(newptr, ptr, MIN(size, algined_size));
+          mm_free(ptr);
        }
     }
  
-    /*If next block is not allocated, realloc request can be serviced by merging both blocks*/
-    void *next = NEXT_BLKP(ptr);
-    int next_alloc = GET_ALLOC(HDRP(next));
-    
-    size_t coalesce_size = (GET_SIZE(HDRP(next)) + GET_SIZE(HDRP(ptr)));
-    if (!next_alloc && size <= coalesce_size-2*WSIZE){
-        fill_block(next);
-        PUT(HDRP(ptr), PACK(coalesce_size, 1));
-        PUT(FTRP(ptr), PACK(coalesce_size, 1));
-        return ptr;
+    blocks = GET_SIZE(HDRP(ptr)) - aligned_size;
+    if(blocks < 2 * (1<<7)){
+        SET_RALLOC(HDRP(NEXT_BLKP(newptr)));
     }
-
-    /* If old ptr is NULL, then this is just malloc. */
-    
-    newptr = mm_malloc(size);
-
-    /* If realloc() fails the original block is left untouched  */
-    if (newptr == NULL){
-        return NULL;
-    }
-
-    /* Copy the old data. */
-    oldsize = GET_SIZE(HDRP(ptr));
-    if (size < oldsize)
-        oldsize = size;
-    memcpy(newptr, ptr, oldsize);
-
-    /* Free the old block. */
-    mm_free(ptr);
-
     return newptr;
+ 
+//     /*If next block is not allocated, realloc request can be serviced by merging both blocks*/
+//     void *next = NEXT_BLKP(ptr);
+//     int next_alloc = GET_ALLOC(HDRP(next));
+    
+//     size_t coalesce_size = (GET_SIZE(HDRP(next)) + GET_SIZE(HDRP(ptr)));
+//     if (!next_alloc && size <= coalesce_size-2*WSIZE){
+//         fill_block(next);
+//         PUT(HDRP(ptr), PACK(coalesce_size, 1));
+//         PUT(FTRP(ptr), PACK(coalesce_size, 1));
+//         return ptr;
+//     }
+
+//     /* If old ptr is NULL, then this is just malloc. */
+    
+//     newptr = mm_malloc(size);
+
+//     /* If realloc() fails the original block is left untouched  */
+//     if (newptr == NULL){
+//         return NULL;
+//     }
+
+//     /* Copy the old data. */
+//     oldsize = GET_SIZE(HDRP(ptr));
+//     if (size < oldsize)
+//         oldsize = size;
+//     memcpy(newptr, ptr, oldsize);
+
+//     /* Free the old block. */
+//     mm_free(ptr);
+
+//     return newptr;
 }
