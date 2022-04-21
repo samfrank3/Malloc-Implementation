@@ -285,7 +285,7 @@ static void *extend_heap(size_t words){
     /* Allocate an even number of words to maintain alignment. */
     size = (words % 2) ? (words + 1) * WSIZE : words * WSIZE;
     if ((bp = mem_sbrk(size)) == (void *)-1) {
-        return (NULL);
+        return NULL;
     }
 
     /* Initialize free block header/footer and the epilogue header. */
@@ -371,11 +371,11 @@ static void *segregated_best_fit(size_t asize){
  */
 int mm_init(void){
     if((seg_p = mem_sbrk(num_buckets*WSIZE)) == (void *)-1)  /*allocate space for segregated list in heap*/
-        return (-1);
+        return -1;
     
     /* Create the initial empty heap. */
     if ((heap_listp = mem_sbrk(4 * WSIZE)) == (void *)-1)
-        return (-1);
+        return -1;
     PUT(heap_listp, 0);                            /* Alignment padding */
     PUT(heap_listp + (1 * WSIZE), PACK(DSIZE, 1)); /* Prologue header */
     PUT(heap_listp + (2 * WSIZE), PACK(DSIZE, 1)); /* Prologue footer */
@@ -386,7 +386,7 @@ int mm_init(void){
     for (i = 0; i < num_buckets; i++)
         seg_p[i] = NULL;
 
-    return (0);
+    return 0;
 }
 
 /*
@@ -410,7 +410,7 @@ void * mm_malloc(size_t size){
     /* Search the free list for a fit with the best fit policy */
     if ((bp = segregated_best_fit(asize)) != NULL) {
         place(bp, asize,0);
-        return (bp);
+        return bp;
     }
 
     /* No fit found.  Get more memory and place the block */
@@ -419,7 +419,7 @@ void * mm_malloc(size_t size){
         return (NULL);
     place(bp, asize,1);
     
-    return (bp);
+    return bp;
 }
 
 /*
@@ -457,15 +457,13 @@ void *mm_realloc(void *ptr, size_t size){
     void *newptr;
     size_t new_size = size;
 
- 
-    if(ptr == NULL){
-        mm_malloc(size);
-    }
-
     /* If size == 0 , free the block. */
     if (size == 0){
         mm_free(ptr);
         return NULL;
+    }
+    if (ptr == NULL){
+        return mm_malloc(size);
     }
 
     /*If the realloc'd block has previously been given more size than it needs, perhaps
@@ -474,6 +472,7 @@ void *mm_realloc(void *ptr, size_t size){
     if (size < csize-2*WSIZE) {
         return ptr;
     }
+ 
 
         
     /*If next block is not allocated, realloc request can be serviced by merging both blocks*/
@@ -489,14 +488,12 @@ void *mm_realloc(void *ptr, size_t size){
     }
 
     /* If old ptr is NULL, then this is just malloc. */
-    if (ptr == NULL){
-        return (mm_malloc(size));
-    }
+    
     newptr = mm_malloc(size);
 
     /* If realloc() fails the original block is left untouched  */
     if (newptr == NULL){
-        return (NULL);
+        return NULL;
     }
 
     /* Copy the old data. */
@@ -508,5 +505,5 @@ void *mm_realloc(void *ptr, size_t size){
     /* Free the old block. */
     mm_free(ptr);
 
-    return (newptr);
+    return newptr;
 }
