@@ -455,6 +455,12 @@ void mm_free(void *bp){
 void *mm_realloc(void *ptr, size_t size){
     size_t oldsize;
     void *newptr;
+    size_t new_size = size;
+
+ 
+    if(ptr == NULL){
+        mm_malloc(size);
+    }
 
     /* If size == 0 , free the block. */
     if (size == 0){
