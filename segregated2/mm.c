@@ -440,16 +440,16 @@ void *mm_realloc(void *ptr, size_t size){
         return ptr;
     }
 
-            /* If old ptr is NULL, then this is just malloc. */
-    if (ptr == NULL)
+    /* If old ptr is NULL, then this is just malloc. */
+    if (ptr == NULL){
         return (mm_malloc(size));
+    }
+    newptr = mm_malloc(size);
 
-        newptr = mm_malloc(size);
-
-        /* If realloc() fails the original block is left untouched  */
-    if (newptr == NULL)
+    /* If realloc() fails the original block is left untouched  */
+    if (newptr == NULL){
         return (NULL);
-
+    }
 
     /* Copy the old data. */
     oldsize = GET_SIZE(HDRP(ptr));
