@@ -47,6 +47,7 @@ team_t team = {
 #define CHUNKSIZE  (1 << 12)      /* Initial heap size (bytes) */
 
 #define MAX(x, y)  ((x) > (y) ? (x) : (y))
+#define MIN(x, y)  ((x) > (y) ? (y) : (x))
 
 /* Pack a size and allocated bit into a word */
 /* Pack creates the top and bottom of the block */
@@ -510,7 +511,7 @@ void *mm_realloc(void *ptr, size_t size){
           PUT(FTRP(ptr), PACK(aligned_size + csize, 1));
        }else{
           newptr = mm_malloc(aligned_size - DSIZE);
-          memcpy(newptr, ptr, MIN(size, algined_size));
+          memcpy(newptr, ptr, MIN(size, aligned_size));
           mm_free(ptr);
        }
     }
