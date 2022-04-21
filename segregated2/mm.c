@@ -4,8 +4,8 @@
  
  
  REALLOC:
- Since we know that all size will be multiples of 8, we know that we can store the realloc in the second to last bit 
- the same way we stored the free bit. 
+ Since we know that all size will be multiples of 8, we know that we can store the realloc in the second to last bit
+ the same way we stored the free bit.
  
  */
 #include <stdio.h>
@@ -181,12 +181,9 @@ static void fill_block(void *current){
 
 /* Coalesce Function to help reduce fragmentation for segmentation implementation*/
 static void *coalesce(void *bp){
-    size_t prev = GET_ALLOC(HDRP(PREV_BLKP(ptr)));
-    size_t next = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
-    size_t size = GET_SIZE(HDRP(ptr));
-    
-    if (GET_TAG(HDRP(PREV_BLKP(ptr))))
-        prev = 1;
+    size_t prev = GET_ALLOC(HDRP(PREV_BLKP(bp)));
+    size_t next = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
+//    size_t size = GET_SIZE(HDRP(bp));
     
     /* Case 1 : previous and next allocated*/
     if (prev && next) {
