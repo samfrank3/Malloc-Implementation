@@ -1,13 +1,12 @@
 /*
- * mm-naive.c - The fastest, least memory-efficient malloc package.
- *
- * In this naive approach, a block is allocated by simply incrementing
- * the brk pointer.  A block is pure payload. There are no headers or
- * footers.  Blocks are never coalesced or reused. Realloc is
- * implemented directly using mm_malloc and mm_free.
- *
- * NOTE TO STUDENTS: Replace this header comment with your own header
- * comment that gives a high level description of your solution.
+ 
+ 
+ 
+ 
+ REALLOC:
+ Since we know that all size will be multiples of 8, we know that we can store the realloc in the second to last bit 
+ the same way we stored the free bit. 
+ 
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,6 +73,10 @@ team_t team = {
 #define SEG_SET_NEXT(bp, next_block_ptr) PUT(bp, next_block_ptr)
 #define SEG_SET_PREV(bp, prev_block_ptr) PUT(GET_PREV(bp), prev_block_ptr)
 
+/*SET AND GET REALLOC BIT*/
+#define GET_RALLOC(p) (GET(p) & 0x2)
+#define SET_RALLOC(p) (GET(p) | 0x2)
+
 /* Global variables: */
 static char *heap_listp; /* Pointer to first block */
 
@@ -82,7 +85,6 @@ size_t num_buckets = 16;
 static char** seg_p;
 
 
-/* Defining additional macros for segregated list */
 
 
 
@@ -179,13 +181,20 @@ static void fill_block(void *current){
 
 /* Coalesce Function to help reduce fragmentation for segmentation implementation*/
 static void *coalesce(void *bp){
+    size_t prev = GET_ALLOC(HDRP(PREV_BLKP(ptr)));
+    size_t next = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
+    size_t size = GET_SIZE(HDRP(ptr));
+    
+    if (GET_TAG(HDRP(PREV_BLKP(ptr))))
+        prev = 1;
+    
     /* Case 1 : previous and next allocated*/
-    if (GET_ALLOC(FTRP(PREV_BLKP(bp))) && GET_ALLOC(HDRP(NEXT_BLKP(bp)))) {
+    if (prev && next) {
         add_to_list(bp);                               // Add to free list
     }
 
     /* Case 2 : Next Block is Free*/
-    if (GET_ALLOC(FTRP(PREV_BLKP(bp))) && !GET_ALLOC(HDRP(NEXT_BLKP(bp)))) {
+    if (prev && !next) {
         void *next = NEXT_BLKP(bp);
         fill_block(next); //remove 'next' free block pointer from its segregated list
 
@@ -212,7 +221,7 @@ static void *coalesce(void *bp){
         add_to_list(bp); //add combined block to free list
     }
     /* Case 3: Previous Block is Free*/
-    if (!GET_ALLOC(FTRP(PREV_BLKP(bp))) && GET_ALLOC(HDRP(NEXT_BLKP(bp)))) {
+    if (!prev && next) {
         void *prev = PREV_BLKP(bp);
         fill_block(prev);
         
@@ -240,7 +249,7 @@ static void *coalesce(void *bp){
     }
 
     /* Case 4: Next and Previous Blocks are Free*/
-    if (!GET_ALLOC(FTRP(PREV_BLKP(bp))) && !GET_ALLOC(HDRP(NEXT_BLKP(bp)))) {
+    if (!prev && !next) {
         void *prev = PREV_BLKP(bp);
         void *next = NEXT_BLKP(bp);
         fill_block(prev);
