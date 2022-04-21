@@ -77,7 +77,7 @@ team_t team = {
 static char *heap_listp; /* Pointer to first block */
 
 /* Added Global variables: */
-size_t seg_count = 16;
+size_t seg_count = 8;
 static char** tiny_p;
 static char** big_p;
 static char** seg_p;
@@ -90,21 +90,21 @@ static char** seg_p;
 /* Give an index of the list from an array based on power of 2*/
 static int list_number(size_t size){
     if(size > 16384){
-        return 15
+        return 7;
     }else if(size > 8192){
-        return 14;
+        return 6;
     }else if(size > 4096){
-        return 13
+        return 5;
     }else if(size > 2048){
-        return 12;
+        return 4;
     }else if(size > 1024){
-        return 11;
+        return 3;
     }else if(size > 512){
-        return 10;
+        return 2;
     }else if(size > 256){
-        return 9;
+        return 1;
     }else if(size > 128){
-        return 8;
+        return 0;
     }else if(size > 64){
         return 7;
     }else if(size > 32){
@@ -126,27 +126,27 @@ static int list_number(size_t size){
 
 /* Add newly freed block pointer to the segregated list of appropriate size */
 static void add_to_list(void *new){
-    size_t index = list_number(GET_SIZE(HDRP(new)));
+    size_t size = GET_SIZE(HDRP(new));
+    size_t index = list_number(size);
     
-    if(listnum > 7){
-        SEG_SET_NEXT(new, (size_t) tiny_p[index]);
-        SEG_SET_PREV(new, (size_t) NULL);
-        
-        if(tiny_p[index] != NULL){
-            SEG_SET_PREV(tiny_p[index], (size_t) new);   
-        }
-        
-        tiny_p[index] = new;
-    }else{
+    if(size > 128){
         SEG_SET_NEXT(new, (size_t) big_p[index]);
         SEG_SET_PREV(new, (size_t) NULL);
         
         if(big_p[index] != NULL){
             SEG_SET_PREV(big_p[index], (size_t) new);   
         }
-        
         big_p[index] = new;
+    }else{
+        SEG_SET_NEXT(new, (size_t) tiny_p[index]);
+        SEG_SET_PREV(new, (size_t) NULL);
+        
+        if(tiny_p[index] != NULL){
+            SEG_SET_PREV(tiny_p[index], (size_t) new);   
+        }
+        tiny_p[index] = new;
     }
+    
     
 //     size_t listnum = list_number(GET_SIZE(HDRP(new)));// Get appropriate sized list for newly freed block to be placed in
     
@@ -164,22 +164,46 @@ static void add_to_list(void *new){
 
 /* Remove newly filled (free) block from the segregated list of free blocks*/
 static void fill_block(void *current){
-
-    int id = list_number(GET_SIZE(HDRP(current)));   // Get appropriate sized list for newly freed block to be removed
-
-    /* Checks to see if the current free block is not the head of its segregated list*/
-    if (SEG_GET_PREV_BLKP(current) != (size_t) NULL){ //If not head
-            SEG_SET_NEXT_BLKP(SEG_GET_PREV_BLKP(current),SEG_GET_NEXT_BLKP(current)); //Sets the previous block's next pointer to current's next block
+    size_t size = GET_SIZE(HDRP(current));
+    size_t index = list_number(size);
+    
+    if(size > 128){
+        if(SEG_GET_PREV(current) != (size_t) NULL){
+            SEG_SET_NEXT(SEG_GET_PREV(current), SEG_GET_NEXT(current));   
+        }else{
+            big_p[index] = (char*) SEG_GET_NEXT(current);
+        }
+        
+        if(SEG_GET_NEXT(current) != (size_t) NULL){
+            SEG_SET_PREV(SEG_GET_NEXT(current), SEG_GET_PREV(current));   
+        }
+    }else{
+        if(SEG_GET_PREV(current) != (size_t) NULL){
+            SEG_SET_NEXT(SEG_GET_PREV(current), SEG_GET_NEXT(current));   
+        }else{
+            tiny_p[index] = (char*) SEG_GET_NEXT(current);
+        }
+        
+        if(SEG_GET_NEXT(current) != (size_t) NULL){
+            SEG_SET_PREV(SEG_GET_NEXT(current), SEG_GET_PREV(current));   
+        }  
     }
-    else{
-        seg_p[id] = (char*) SEG_GET_NEXT_BLKP(current); //If head
-    }
 
-    /* Checks to see if the current free block is not the tail of its segregated lists*/
-    if (SEG_GET_NEXT_BLKP(current) != (size_t) NULL){ //If not tail
-            SEG_SET_PREV_BLKP(SEG_GET_NEXT_BLKP(current), SEG_GET_PREV_BLKP(current)); //Sets the next block's previous pointer to current's previous block
-    }
-    return;
+//     int id = list_number(GET_SIZE(HDRP(current)));   // Get appropriate sized list for newly freed block to be removed
+
+//     /* Checks to see if the current free block is not the head of its segregated list*/
+//     if (SEG_GET_PREV_BLKP(current) != (size_t) NULL){ //If not head
+//             SEG_SET_NEXT_BLKP(SEG_GET_PREV_BLKP(current),SEG_GET_NEXT_BLKP(current)); //Sets the previous block's next pointer to current's next block
+//     }
+//     else{
+//         seg_p[id] = (char*) SEG_GET_NEXT_BLKP(current); //If head
+//     }
+
+//     /* Checks to see if the current free block is not the tail of its segregated lists*/
+//     if (SEG_GET_NEXT_BLKP(current) != (size_t) NULL){ //If not tail
+//             SEG_SET_PREV_BLKP(SEG_GET_NEXT_BLKP(current), SEG_GET_PREV_BLKP(current)); //Sets the next block's previous pointer to current's previous block
+//     }
+//     return;
 }
 
 /* Coalesce Function to help reduce fragmentation for segmentation implementation*/
@@ -341,28 +365,116 @@ static void *segregated_best_fit(size_t asize){
     void *bestfit = NULL; //pointer for best fit block
         
     /* Searching segregated lists whose block size is greater than or equal to the asize */
-    int i;
-    int id = list_number(asize);
-    for (i = id; i < seg_count; i++) {
-        void *bp = seg_p[i];
-            while (bp != NULL) {                          //goes through the linked list of each segregated free lists
-                size_t curr_size = GET_SIZE(HDRP(bp));
-                if (!GET_ALLOC(HDRP(bp)) && (asize <= curr_size)) {
-                    size_t diff = curr_size;
-                    /*finds best fit from the list by finding the minimum difference*/
-                    if (diff < min_diff) {
+    int index = list_number(asize);
+    void *bp  
+    
+    if(asize <= 128){
+        for(int i = index; i < seg_count; i++){
+            bp = tiny_p[i];
+            while(bp != NULL){
+                size_t csize = GET_SIZE(HDRP(bp));
+                if(!GET_ALLOC(HDRP(bp)) && (asize <= csize)){
+                    size_t diff = csize;
+                    if(diff < min_diff){
                         min_diff = diff;
                         bestfit = bp;
                     }
                 }
-                bp = (void*) SEG_GET_NEXT_BLKP(bp); //iterate to next pointer within the segregated list
+                bp = (void*) SEG_GET_NEXT(bp)
             }
-        
-        /*if we get a fit in the list, no need to check other lists of higher sizes.*/
-        if(bestfit!= NULL)
-            return bestfit;
+            if(bestfit != NULL){
+                return bestfit;   
+            }
+        }
     }
+    if(bestfit != NULL){
+        return bestfit;
+    }
+    for(int i = index; i < seg_count; i++){
+        bp = big_p[i];
+        while(bp != NULL){
+            size_t csize = GET_SIZE(HDRP(bp));
+            if(!GET_ALLOC(HDRP(bp)) && (asize <= csize)){
+                size_t diff = csize;
+                if(diff < min_diff){
+                    min_diff = diff;
+                    bestfit = bp;
+                }
+            }
+            bp = (void*) SEG_GET_NEXT(bp);
+        }
+        if(bestfit != NULL){
+            return bestfit;   
+        }
+    }
+    
     return bestfit;
+    
+    
+//     if(asize > 128){
+//         for (i = id; i < seg_count; i++) {
+//             void *bp = big_p[i];
+//             while (bp != NULL) {                          //goes through the linked list of each segregated free lists
+//                 size_t curr_size = GET_SIZE(HDRP(bp));
+//                 if (!GET_ALLOC(HDRP(bp)) && (asize <= curr_size)) {
+//                     size_t diff = curr_size;
+//                     /*finds best fit from the list by finding the minimum difference*/
+//                     if (diff < min_diff) {
+//                         min_diff = diff;
+//                         bestfit = bp;
+//                     }
+//                 }
+//                 bp = (void*) SEG_GET_NEXT_BLKP(bp); //iterate to next pointer within the segregated list
+//             }
+        
+//             /*if we get a fit in the list, no need to check other lists of higher sizes.*/
+//             if(bestfit != NULL)
+//                 return bestfit;
+//             }
+//         }
+//     }else{
+//         for (i = id; i < seg_count; i++) {
+//             void *bp = tiny_p[i];
+//             while (bp != NULL) {                          //goes through the linked list of each segregated free lists
+//                 size_t curr_size = GET_SIZE(HDRP(bp));
+//                 if (!GET_ALLOC(HDRP(bp)) && (asize <= curr_size)) {
+//                     size_t diff = curr_size;
+//                     /*finds best fit from the list by finding the minimum difference*/
+//                     if (diff < min_diff) {
+//                         min_diff = diff;
+//                         bestfit = bp;
+//                     }
+//                 }
+//                 bp = (void*) SEG_GET_NEXT_BLKP(bp); //iterate to next pointer within the segregated list
+//             }
+        
+//             /*if we get a fit in the list, no need to check other lists of higher sizes.*/
+//             if(bestfit != NULL)
+//                 return bestfit;
+//             }
+//         }
+//     }
+    
+//     for (i = id; i < seg_count; i++) {
+//         void *bp = big_p[i];
+//             while (bp != NULL) {                          //goes through the linked list of each segregated free lists
+//                 size_t curr_size = GET_SIZE(HDRP(bp));
+//                 if (!GET_ALLOC(HDRP(bp)) && (asize <= curr_size)) {
+//                     size_t diff = curr_size;
+//                     /*finds best fit from the list by finding the minimum difference*/
+//                     if (diff < min_diff) {
+//                         min_diff = diff;
+//                         bestfit = bp;
+//                     }
+//                 }
+//                 bp = (void*) SEG_GET_NEXT_BLKP(bp); //iterate to next pointer within the segregated list
+//             }
+        
+//         /*if we get a fit in the list, no need to check other lists of higher sizes.*/
+//         if(bestfit!= NULL)
+//             return bestfit;
+//     }
+//     return bestfit;
 }
 
 /*
@@ -370,22 +482,26 @@ static void *segregated_best_fit(size_t asize){
  */
 int mm_init(void){
     if((seg_p = mem_sbrk(seg_count*WSIZE)) == (void *)-1)  /*allocate space for segregated list in heap*/
-        return (-1);
+        return -1;
     
     /* Create the initial empty heap. */
     if ((heap_listp = mem_sbrk(4 * WSIZE)) == (void *)-1)
-        return (-1);
+        return -1;
     PUT(heap_listp, 0);                            /* Alignment padding */
     PUT(heap_listp + (1 * WSIZE), PACK(DSIZE, 1)); /* Prologue header */
     PUT(heap_listp + (2 * WSIZE), PACK(DSIZE, 1)); /* Prologue footer */
     PUT(heap_listp + (3 * WSIZE), PACK(0, 1));     /* Epilogue header */
     heap_listp += (2 * WSIZE);
     /* Initializes the the segregated list to NULL*/
-    int i;
-    for (i = 0; i < seg_count; i++)
-        seg_p[i] = NULL;
+//     int i;
+    for(int i = 0; i < seg_count; i++){
+        tiny_p[i] = NULL;
+        big_p[i] = NULL;
+    }
+//     for (i = 0; i < seg_count; i++)
+//         seg_p[i] = NULL;
 
-    return (0);
+    return 0;
 }
 
 /*
