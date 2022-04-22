@@ -201,7 +201,7 @@ static void fill_block(void *current){
 static void *coalesce(void *bp){
     size_t prev = GET_ALLOC(HDRP(PREV_BLKP(bp)));
     size_t next = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
-//    size_t size = GET_SIZE(HDRP(bp));
+    size_t size = GET_SIZE(HDRP(bp));
     
     /* Case 1 : previous and next allocated*/
     if (prev && next) {
@@ -248,7 +248,7 @@ static void *coalesce(void *bp){
         fill_block(bp);
         size += GET_SIZE(HDRP(prev));
         PUT(FTRP(bp), PACK(size,0));
-        PUT(HRDP(prev), PACK(size,0));
+        PUT(HDRP(prev), PACK(size,0));
         bp = prev;
         
 //         /* Handles the different cases of combining the next's free block and the current's free block*/
