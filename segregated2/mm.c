@@ -340,21 +340,21 @@ static void place(void *bp, size_t asize, int heapExtended)
     fill_block(bp);
     
     if(rsize >= 2*DSIZE){//if the remaining size is greater than the min block size
-        if(asize >= 100){
-            PUT(HDRP(bp), PACK(rsize, 0));
-            PUT(FTRP(bp), PACK(rsize, 0));
-            /*splice block*/
-            PUT(HDRP(next), PACK(asize, 1));
-            PUT(FTRP(next), PACK(asize, 1));
-            add_to_list(bp); //Put the newly spliced free block at front of the free list
-        }else{
+//         if(asize >= 100){
+//             PUT(HDRP(bp), PACK(rsize, 0));
+//             PUT(FTRP(bp), PACK(rsize, 0));
+//             /*splice block*/
+//             PUT(HDRP(next), PACK(asize, 1));
+//             PUT(FTRP(next), PACK(asize, 1));
+//             add_to_list(bp); //Put the newly spliced free block at front of the free list
+//         }else{
             PUT(HDRP(bp), PACK(asize, 1));
             PUT(FTRP(bp), PACK(asize, 1));
             /*splice block*/
             PUT(HDRP(next), PACK(rsize, 0));
             PUT(FTRP(next), PACK(rsize, 0));
             add_to_list(next); 
-        }
+//         }
     }else{
         PUT(HDRP(bp), PACK(csize, 1));
         PUT(FTRP(bp), PACK(csize, 1));  
