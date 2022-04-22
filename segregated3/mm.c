@@ -91,7 +91,7 @@ team_t team = {
 static char *heap_listp; /* Pointer to first block */
 
 /* Added Global variables: */
-size_t num_buckets = 20;
+size_t num_buckets = 18;
 static char** seg_p;
 
 
@@ -100,45 +100,80 @@ static char** seg_p;
 
 /* Give an index of the list from an array based on power of 2*/
 static int get_index(size_t size){
-    if(size > 32768){
-        return 18;
-    }else if(size > 16384){
-        return 17;
-    }else if(size > 8192){
+    if(size > 524288){
         return 16;
-    }else if(size > 4096){
+    }else if(size > 262144){
         return 15;
-    }else if(size > 2048){
+    }else if(size > 131072){
         return 14;
-    }else if(size > 1024){
+    }else if(size > 65536){
         return 13;
-    }else if(size > 512){
+    }else if(size > 32768){
         return 12;
-    }else if(size > 256){
-        return 11;
-    }else if(size > 128){
+    }else if(size > 16384){
+        return 11
+    }else if(size > 8192){
         return 10;
-    }else if(size > 120){
+    }else if(size > 4096){
         return 9;
-    }else if(size > 104){
-         return 8;
-    }else if(size > 88){
-         return 7;
-    }else if(size > 72){
+    }else if(size > 2048){
+        return 8;
+    }else if(size > 1024){
+        return 7;
+    }else if(size > 512){
         return 6;
-    }else if(size > 64){//5-8
+    }else if(size > 256){
         return 5;
-    }else if(size > 32){//4
+    }else if(size > 128){
         return 4;
-    }else if(size > 24){//3
+    }else if(size > 64){
         return 3;
-    }else if(size > 16){ //2
+    }else if(size > 32){
         return 2;
-    }else if(size > 8){//1 block
+    }else if(size > 16){
         return 1;
-    }else{
+    }else{//smallest blocksize is 16 (8 for header, 8 for footer) 
         return 0;
     }
+//     if(size > 32768){
+//         return 18;
+//     }else if(size > 16384){
+//         return 17;
+//     }else if(size > 8192){
+//         return 16;
+//     }else if(size > 4096){
+//         return 15;
+//     }else if(size > 2048){
+//         return 14;
+//     }else if(size > 1024){
+//         return 13;
+//     }else if(size > 512){
+//         return 12;
+//     }else if(size > 256){
+//         return 11;
+//     }else if(size > 128){
+//         return 10;
+//     }else if(size > 120){
+//         return 9;
+//     }else if(size > 104){
+//          return 8;
+//     }else if(size > 88){
+//          return 7;
+//     }else if(size > ){
+//         return 6;
+//     }else if(size > 64){//5-8
+//         return 5;
+//     }else if(size > 32){//4
+//         return 4;
+//     }else if(size > 24){//3
+//         return 3;
+//     }else if(size > 16){ //2
+//         return 2;
+//     }else if(size > 8){//1 block
+//         return 1;
+//     }else{
+//         return 0;
+//     }
 //         if (size > 16384) //based off of 2^14
 //             return 9;
 //         else if (size > 8192) //based off of 2^13
@@ -174,7 +209,6 @@ static void add_to_list(void *new){
         SEG_SET_PREV(seg_p[index], (size_t) new);
     }
     seg_p[index] = new; //places the newly freed block pointer as head of list
-    return;
 }
 
 /* Remove newly filled (free) block from the segregated list of free blocks*/
