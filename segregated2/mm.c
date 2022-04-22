@@ -205,7 +205,8 @@ static void *coalesce(void *bp){
     
     /* Case 1 : previous and next allocated*/
     if (prev && next) {
-        add_to_list(bp);                               // Add to free list
+//         add_to_list(bp);   // Add to free list
+         return bp;
     }
 
     /* Case 2 : Next Block is Free*/
