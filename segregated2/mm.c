@@ -332,7 +332,7 @@ static void *extend_heap(size_t words){
 }
 
 /* Places a block of size (asize) at the start of the free block bp */
-static void *place(void *bp, size_t asize, int heapExtended)
+static void place(void *bp, size_t asize, int heapExtended)
 {
     size_t csize = GET_SIZE(HDRP(bp)); //Gets the current block size
 
@@ -346,7 +346,6 @@ static void *place(void *bp, size_t asize, int heapExtended)
             PUT(HDRP(bp), PACK(csize - asize, 0));
             PUT(FTRP(bp), PACK(csize - asize, 0));
             add_to_list(bp); //Put the newly spliced free block at front of the free list
-            return bp;
         } else {                    /*else no splicing, getting the whole block*/
             PUT(HDRP(bp), PACK(csize, 1));
             PUT(FTRP(bp), PACK(csize, 1));
@@ -363,7 +362,6 @@ static void *place(void *bp, size_t asize, int heapExtended)
             PUT(HDRP(bp), PACK(csize - asize, 0));
             PUT(FTRP(bp), PACK(csize - asize, 0));
             add_to_list(bp); //Put the newly spliced free block at front of the free list
-            return bp;
         } else {
             /*else no splicing necessary, they are getting the whole block*/
             PUT(HDRP(bp), PACK(csize, 1));
@@ -371,7 +369,6 @@ static void *place(void *bp, size_t asize, int heapExtended)
             fill_block(bp); //removes the recently filled block from free list
         }
     }
-    return bp;
 }
 
 /* Adopted the best fit policy for finding a free block */
@@ -450,17 +447,17 @@ void * mm_malloc(size_t size){
 
     /* Search the free list for a fit with the best fit policy */
     if ((bp = segregated_best_fit(asize)) != NULL) {
-        
-        return place(bp, asize,0);;
+        place(bp, asize,0);
+        return bp;
     }
 
     /* No fit found.  Get more memory and place the block */
     extendsize = MAX(asize, CHUNKSIZE);
     if ((bp = extend_heap(extendsize / WSIZE)) == NULL)
         return (NULL);
-    return place(bp, asize,1);
+    place(bp, asize,1);
     
-    
+    return bp;
 }
 
 /*
