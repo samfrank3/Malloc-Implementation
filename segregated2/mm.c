@@ -210,87 +210,102 @@ static void *coalesce(void *bp){
     }
 
     /* Case 2 : Next Block is Free*/
-    if (prev && !next) {
+    else if (prev && !next) {
         void *next = NEXT_BLKP(bp);
         fill_block(next); //remove 'next' free block pointer from its segregated list
+        fill_block(bp);
+        size+= GET_SIZE(HDRP(next));
+        PUT(HDRP(bp), PACK(size,0));
+        PUT(FTRP(bp), PACK(size,0));
+     
 
-        /* Handles the different cases of combining the next's free block and the current's free block*/
-        size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
-        size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
-        size_t size = GET_SIZE(HDRP(bp));
-        if (prev_alloc && !next_alloc) {                // Case 2 : next block free, combine
-            size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
-            PUT(HDRP(bp), PACK(size, 0));
-            PUT(FTRP(bp), PACK(size, 0));
-        } else if (!prev_alloc && next_alloc) {         // Case 3 : previous block free, combine
-            size += GET_SIZE(HDRP(PREV_BLKP(bp)));
-            PUT(FTRP(bp), PACK(size, 0));
-            PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
-            bp = PREV_BLKP(bp);
-        } else {                                        // Case 4 : both next and previous blocks free, combine
-            size += GET_SIZE(HDRP(PREV_BLKP(bp))) +
-            GET_SIZE(FTRP(NEXT_BLKP(bp)));
-            PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
-            PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
-            bp = PREV_BLKP(bp);
-        }
+//         /* Handles the different cases of combining the next's free block and the current's free block*/
+//         size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
+//         size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
+//         size_t size = GET_SIZE(HDRP(bp));
+//         if (prev_alloc && !next_alloc) {                // Case 2 : next block free, combine
+//             size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
+//             PUT(HDRP(bp), PACK(size, 0));
+//             PUT(FTRP(bp), PACK(size, 0));
+//         } else if (!prev_alloc && next_alloc) {         // Case 3 : previous block free, combine
+//             size += GET_SIZE(HDRP(PREV_BLKP(bp)));
+//             PUT(FTRP(bp), PACK(size, 0));
+//             PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+//             bp = PREV_BLKP(bp);
+//         } else {                                        // Case 4 : both next and previous blocks free, combine
+//             size += GET_SIZE(HDRP(PREV_BLKP(bp))) +
+//             GET_SIZE(FTRP(NEXT_BLKP(bp)));
+//             PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+//             PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
+//             bp = PREV_BLKP(bp);
+//         }
 //         add_to_list(bp); //add combined block to free list
     }
     /* Case 3: Previous Block is Free*/
-    if (!prev && next) {
+    else if (!prev && next) {
         void *prev = PREV_BLKP(bp);
         fill_block(prev);
+        fill_block(bp);
+        size += GET_SIZE(HDRP(prev));
+        PUT(FTRP(bp), PACK(size,0));
+        PUT(HRDP(prev), PACK(size,0));
+        bp = prev;
         
-        /* Handles the different cases of combining the next's free block and the current's free block*/
-        size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
-        size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
-        size_t size = GET_SIZE(HDRP(bp));
-        if (prev_alloc && !next_alloc) {                // Case 2 : next block free, combine
-            size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
-            PUT(HDRP(bp), PACK(size, 0));
-            PUT(FTRP(bp), PACK(size, 0));
-        } else if (!prev_alloc && next_alloc) {         // Case 3 : previous block free, combine
-            size += GET_SIZE(HDRP(PREV_BLKP(bp)));
-            PUT(FTRP(bp), PACK(size, 0));
-            PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
-            bp = PREV_BLKP(bp);
-        } else {                                        // Case 4 : both next and previous blocks free, combine
-            size += GET_SIZE(HDRP(PREV_BLKP(bp))) +
-            GET_SIZE(FTRP(NEXT_BLKP(bp)));
-            PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
-            PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
-            bp = PREV_BLKP(bp);
-        }
+//         /* Handles the different cases of combining the next's free block and the current's free block*/
+//         size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
+//         size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
+//         size_t size = GET_SIZE(HDRP(bp));
+//         if (prev_alloc && !next_alloc) {                // Case 2 : next block free, combine
+//             size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
+//             PUT(HDRP(bp), PACK(size, 0));
+//             PUT(FTRP(bp), PACK(size, 0));
+//         } else if (!prev_alloc && next_alloc) {         // Case 3 : previous block free, combine
+//             size += GET_SIZE(HDRP(PREV_BLKP(bp)));
+//             PUT(FTRP(bp), PACK(size, 0));
+//             PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+//             bp = PREV_BLKP(bp);
+//         } else {                                        // Case 4 : both next and previous blocks free, combine
+//             size += GET_SIZE(HDRP(PREV_BLKP(bp))) +
+//             GET_SIZE(FTRP(NEXT_BLKP(bp)));
+//             PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+//             PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
+//             bp = PREV_BLKP(bp);
+//         }
 //         add_to_list(bp); //add combined free block to segmented free list
     }
 
     /* Case 4: Next and Previous Blocks are Free*/
-    if (!prev && !next) {
+    else {
         void *prev = PREV_BLKP(bp);
         void *next = NEXT_BLKP(bp);
         fill_block(prev);
         fill_block(next);
+        fill_block(bp);
+        size += GET_SIZE(HDRP(prev)) + GET_SIZE(HDRP(next));
+        PUT(HDRP(prev), PACK(size, 0));
+        PUT(FTRP(next), PACK(size, 0));
+        bp = prev;
         
-        /* Handles the different cases of combining the next's free block and the current's free block*/
-        size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
-        size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
-        size_t size = GET_SIZE(HDRP(bp));
-        if (prev_alloc && !next_alloc) {                // Case 2 : next block free, combine
-            size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
-            PUT(HDRP(bp), PACK(size, 0));
-            PUT(FTRP(bp), PACK(size, 0));
-        } else if (!prev_alloc && next_alloc) {         // Case 3 : previous block free, combine
-            size += GET_SIZE(HDRP(PREV_BLKP(bp)));
-            PUT(FTRP(bp), PACK(size, 0));
-            PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
-            bp = PREV_BLKP(bp);
-        } else {                                        // Case 4 : both next and previous blocks free, combine
-            size += GET_SIZE(HDRP(PREV_BLKP(bp))) +
-            GET_SIZE(FTRP(NEXT_BLKP(bp)));
-            PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
-            PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
-            bp = PREV_BLKP(bp);
-        }
+//         /* Handles the different cases of combining the next's free block and the current's free block*/
+//         size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
+//         size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
+//         size_t size = GET_SIZE(HDRP(bp));
+//         if (prev_alloc && !next_alloc) {                // Case 2 : next block free, combine
+//             size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
+//             PUT(HDRP(bp), PACK(size, 0));
+//             PUT(FTRP(bp), PACK(size, 0));
+//         } else if (!prev_alloc && next_alloc) {         // Case 3 : previous block free, combine
+//             size += GET_SIZE(HDRP(PREV_BLKP(bp)));
+//             PUT(FTRP(bp), PACK(size, 0));
+//             PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+//             bp = PREV_BLKP(bp);
+//         } else {                                        // Case 4 : both next and previous blocks free, combine
+//             size += GET_SIZE(HDRP(PREV_BLKP(bp))) +
+//             GET_SIZE(FTRP(NEXT_BLKP(bp)));
+//             PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+//             PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
+//             bp = PREV_BLKP(bp);
+//         }
 //         add_to_list(bp); //add combined free block to segmented free lists
     }
     add_to_list(bp);
