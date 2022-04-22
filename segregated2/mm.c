@@ -361,7 +361,10 @@ static void *segregated_best_fit(size_t asize){
                 if (!GET_ALLOC(HDRP(bp)) && (asize <= csize)) {
                     size_t diff = csize;
                     /*finds best fit from the list by finding the minimum difference*/
-                    if (diff < min || min == (size_t) NULL) {
+                    if(min == (size_t) NULL){
+                        min = diff;
+                        bestfit = bp;
+                    }else if (diff < min) {
                         min = diff;
                         bestfit = bp;
                     }
