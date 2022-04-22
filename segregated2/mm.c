@@ -335,12 +335,14 @@ static void *extend_heap(size_t words){
 static void place(void *bp, size_t asize, int heapExtended)
 {
     size_t csize = GET_SIZE(HDRP(bp)); //Gets the current block size
+    fill_block(bp);
     if ((csize - asize) >= (2*DSIZE)) {
         PUT(HDRP(bp), PACK(asize, 1));
         PUT(FTRP(bp), PACK(asize, 1));
         bp = NEXT_BLKP(bp);
         PUT(HDRP(bp), PACK(csize-asize, 0));
         PUT(FTRP(bp), PACK(csize-asize, 0));
+        add_to_list(bp);
     }
     else {
         PUT(HDRP(bp), PACK(csize, 1));
