@@ -233,7 +233,7 @@ static void *coalesce(void *bp){
             PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
             bp = PREV_BLKP(bp);
         }
-        add_to_list(bp); //add combined block to free list
+//         add_to_list(bp); //add combined block to free list
     }
     /* Case 3: Previous Block is Free*/
     if (!prev && next) {
@@ -260,7 +260,7 @@ static void *coalesce(void *bp){
             PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
             bp = PREV_BLKP(bp);
         }
-        add_to_list(bp); //add combined free block to segmented free list
+//         add_to_list(bp); //add combined free block to segmented free list
     }
 
     /* Case 4: Next and Previous Blocks are Free*/
@@ -290,8 +290,9 @@ static void *coalesce(void *bp){
             PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
             bp = PREV_BLKP(bp);
         }
-        add_to_list(bp); //add combined free block to segmented free lists
+//         add_to_list(bp); //add combined free block to segmented free lists
     }
+    add_to_list(bp);
     return bp;
 }
 
