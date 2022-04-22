@@ -83,12 +83,20 @@ team_t team = {
 #define SEG_SET_NEXT(bp, next_block_ptr) PUT(bp, next_block_ptr)
 #define SEG_SET_PREV(bp, prev_block_ptr) PUT(GET_PREV(bp), prev_block_ptr)
 
+/*SET AND GET REALLOC BIT*/
+#define GET_RALLOC(p) (GET(p) & 0x2)
+#define SET_RALLOC(p) (GET(p) | 0x2)
+
 /* Global variables: */
 static char *heap_listp; /* Pointer to first block */
 
 /* Added Global variables: */
 size_t num_buckets = 20;
 static char** seg_p;
+
+
+
+
 
 /* Give an index of the list from an array based on power of 2*/
 static int get_index(size_t size){
@@ -412,8 +420,10 @@ int mm_init(void){
     PUT(heap_listp + (3 * WSIZE), PACK(0, 1));     /* Epilogue header */
     heap_listp += (2 * WSIZE);
     /* Initializes the the segregated list to NULL*/
-    for (int i = 0; i < num_buckets; i++)
+    int i;
+    for (i = 0; i < num_buckets; i++)
         seg_p[i] = NULL;
+
     return 0;
 }
 
@@ -464,7 +474,7 @@ void mm_free(void *bp){
     size = GET_SIZE(HDRP(bp));
     PUT(HDRP(bp), PACK(size, 0));
     PUT(FTRP(bp), PACK(size, 0));
-    //add_to_list(bp);
+    add_to_list(bp);
     coalesce(bp);
 }
 
