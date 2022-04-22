@@ -400,8 +400,8 @@ static void *segregated_best_fit(size_t asize){
  * mm_init - initialize the malloc package.
  */
 int mm_init(void){
-    if((seg_p = mem_sbrk(num_buckets*WSIZE)) == (void *)-1)  /*allocate space for segregated list in heap*/
-        return -1;
+//     if((seg_p = mem_sbrk(num_buckets*WSIZE)) == (void *)-1)  /*allocate space for segregated list in heap*/
+//         return -1;
     
     /* Create the initial empty heap. */
     if ((heap_listp = mem_sbrk(4 * WSIZE)) == (void *)-1)
