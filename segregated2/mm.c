@@ -337,6 +337,7 @@ static void place(void *bp, size_t asize, int heapExtended)
     size_t csize = GET_SIZE(HDRP(bp)); //Gets the current block size
     size_t rsize = csize-asize; //remaining size
     void *next = NEXT_BLKP(bp);
+    fill_block(bp);
     
     if(rsize >= 2*DSIZE){//if the remaining size is greater than the min block size
         if(asize >= 100){
