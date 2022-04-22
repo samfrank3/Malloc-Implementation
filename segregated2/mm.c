@@ -91,7 +91,7 @@ team_t team = {
 static char *heap_listp; /* Pointer to first block */
 
 /* Added Global variables: */
-size_t num_buckets = 16;
+size_t num_buckets = 20;
 static char** seg_p;
 
 
@@ -101,22 +101,30 @@ static char** seg_p;
 /* Give an index of the list from an array based on power of 2*/
 static int get_index(size_t size){
     if(size > 32768){
-        return 14;
+        return 18;
     }else if(size > 16384){
-        return 13;
+        return 17;
     }else if(size > 8192){
-        return 12;
+        return 16;
     }else if(size > 4096){
-        return 11;
+        return 15;
     }else if(size > 2048){
-        return 10;
+        return 14;
     }else if(size > 1024){
-        return 9;
+        return 13;
     }else if(size > 512){
-        return 8;
+        return 12;
     }else if(size > 256){
-        return 7;
+        return 11;
     }else if(size > 128){
+        return 10;
+    }else if(size > 120){
+        return 9;
+    }else if(size > 104){
+         return 8;
+    }else if(size > 88){
+         return 7;
+    }else if(size > 72){
         return 6;
     }else if(size > 64){//5-8
         return 5;
