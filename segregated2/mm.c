@@ -50,6 +50,7 @@ team_t team = {
 #define CHUNKSIZE  (1 << 12)      /* Initial heap size (bytes) */
 
 #define MAX(x, y)  ((x) > (y) ? (x) : (y))
+#define MIN(x, y)  ((x) < (y) ? (x) : (y))
 
 /* Pack a size and allocated bit into a word */
 /* Pack creates the top and bottom of the block */
@@ -492,87 +493,127 @@ void mm_free(void *bp){
  *   block if the allocation was successful and NULL otherwise.
  */
 void *mm_realloc(void *ptr, size_t size){
-    size_t oldsize;
+    size_t old_size = GET_SIZE(HDRP(ptr));
     void *newptr;
-    size_t aligned_size;
+    size_t algin_size; //aligned size
+    size_t min_size; //minsize
     
 
     /* If size == 0 , free the block. */
     if (size == 0){
         mm_free(ptr);
         return NULL;
-    }
-    if (ptr == NULL){
+    }else if (ptr == NULL){
         return mm_malloc(size);
     }
-
+ 
+    //aligned_size = align(size)
+    if(size > DSIZE){
+        align_size = DSIZE * ((size + (DSIZE) + (DSIZE - 1)) / DSIZE)
+    }else{
+        align_size = 2*DSIZE;
+    }
+ 
+    if(align_size == old_size){
+        return ptr;
+    }
+    min_size = MIN(asize, old_size);
+    void *next = NEXT_BLKP(ptr);
+    void *prev = PREV_BLKP(ptr);
+    size_t prev_alloc =  GET_ALLOC(FTRP(prev));
+    size_t next_alloc =  GET_ALLOC(HDRP(next));
+    size_t next_size = GET_SIZE(HDRP(next));
+ 
+ 
+    if(prev_alloc && !next_alloc && (old_size + next_size >= asize)){
+        fill_block(next);
+        PUT(HDRP(ptr), PACK((old_size+new_size), 1));
+        PUT(FTRP(ptr), PACK((old_size+new_size), 1));
+        place(ptr, (old_size+new_size), 0);
+    }else if(!next_size && (align_size >= old_size){
+        size_t extend_size = align_size - old_size;
+        if((long)(mem_sbrk(extend_size)) == -1)
+            return NULL; 
+        PUT(HDRP(ptr), PACK(old_size + extend_size, 1));
+        PUT(FTRP(ptr), PACK(old_size + extend_size, 1));
+        PUT(HDRP(next), PACK(0, 1)); 
+        place(ptr, align_size, 1);
+    }else{
+        void *new_ptr = mm_malloc(align_size);
+        if(new_ptr == NULL)
+            return NULL;
+        memcpy(new_ptr, ptr, MIN(old_size, size));
+        mm_free(ptr);
+        return new_ptr;
+    }
+    return ptr; 
     /*If the realloc'd block has previously been given more size than it needs, perhaps
         this realloc request can be serviced within the same block:*/
-    size_t csize = GET_SIZE(HDRP(ptr));
-    if (size < csize-2*WSIZE) {
-        return ptr;
-    }
+//     size_t csize = GET_SIZE(HDRP(ptr));
+//     if (size < csize-2*WSIZE) {
+//         return ptr;
+//     }
  
-    if(size > DSIZE){
-       aligned_size = ALIGN(size+DSIZE);
-    }else{
-       aligned_size = 2 * DSIZE;
-    }
+//     if(size > DSIZE){
+//        aligned_size = ALIGN(size+DSIZE);
+//     }else{
+//        aligned_size = 2 * DSIZE;
+//     }
  
-    aligned_size += (1<<7);
+//     aligned_size += (1<<7);
  
-    size_t blocks = GET_SIZE(HDRP(ptr)) - aligned_size;
+//     size_t blocks = GET_SIZE(HDRP(ptr)) - aligned_size;
     
  
-    if(blocks < 0){
-       void *next = NEXT_BLKP(ptr);
-       size_t next_alloc = GET_ALLOC(HDRP(next));
-       if(!next_alloc || !GET_SIZE(HDRP(next))){
-          size_t csize = GET_SIZE(HDRP(next)) + GET_SIZE(HDRP(ptr)) - aligned_size;
-          size_t extension;
-          if(csize < 0){
-             extension = MAX(-csize, CHUNKSIZE);
-             csize += extension;
-             if(extend_heap(extension) == NULL){
-                 return NULL;
-             }
-          }
-          fill_block(next);
+//     if(blocks < 0){
+//        void *next = NEXT_BLKP(ptr);
+//        size_t next_alloc = GET_ALLOC(HDRP(next));
+//        if(!next_alloc || !GET_SIZE(HDRP(next))){
+//           size_t csize = GET_SIZE(HDRP(next)) + GET_SIZE(HDRP(ptr)) - aligned_size;
+//           size_t extension;
+//           if(csize < 0){
+//              extension = MAX(-csize, CHUNKSIZE);
+//              csize += extension;
+//              if(extend_heap(extension) == NULL){
+//                  return NULL;
+//              }
+//           }
+//           fill_block(next);
           
-       }else{
+//        }else{
         
-       }
-    }
+//        }
+//     }
  
-    /*If next block is not allocated, realloc request can be serviced by merging both blocks*/
-    void *next = NEXT_BLKP(ptr);
-    int next_alloc = GET_ALLOC(HDRP(next));
+//     /*If next block is not allocated, realloc request can be serviced by merging both blocks*/
+//     void *next = NEXT_BLKP(ptr);
+//     int next_alloc = GET_ALLOC(HDRP(next));
     
-    size_t coalesce_size = (GET_SIZE(HDRP(next)) + GET_SIZE(HDRP(ptr)));
-    if (!next_alloc && size <= coalesce_size-2*WSIZE){
-        fill_block(next);
-        PUT(HDRP(ptr), PACK(coalesce_size, 1));
-        PUT(FTRP(ptr), PACK(coalesce_size, 1));
-        return ptr;
-    }
+//     size_t coalesce_size = (GET_SIZE(HDRP(next)) + GET_SIZE(HDRP(ptr)));
+//     if (!next_alloc && size <= coalesce_size-2*WSIZE){
+//         fill_block(next);
+//         PUT(HDRP(ptr), PACK(coalesce_size, 1));
+//         PUT(FTRP(ptr), PACK(coalesce_size, 1));
+//         return ptr;
+//     }
 
-    /* If old ptr is NULL, then this is just malloc. */
+//     /* If old ptr is NULL, then this is just malloc. */
     
-    newptr = mm_malloc(size);
+//     newptr = mm_malloc(size);
 
-    /* If realloc() fails the original block is left untouched  */
-    if (newptr == NULL){
-        return NULL;
-    }
+//     /* If realloc() fails the original block is left untouched  */
+//     if (newptr == NULL){
+//         return NULL;
+//     }
 
-    /* Copy the old data. */
-    oldsize = GET_SIZE(HDRP(ptr));
-    if (size < oldsize)
-        oldsize = size;
-    memcpy(newptr, ptr, oldsize);
+//     /* Copy the old data. */
+//     oldsize = GET_SIZE(HDRP(ptr));
+//     if (size < oldsize)
+//         oldsize = size;
+//     memcpy(newptr, ptr, oldsize);
 
-    /* Free the old block. */
-    mm_free(ptr);
+//     /* Free the old block. */
+//     mm_free(ptr);
 
-    return newptr;
+//     return newptr;
 }
