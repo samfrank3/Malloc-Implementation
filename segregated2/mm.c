@@ -335,53 +335,40 @@ static void *extend_heap(size_t words){
 static void place(void *bp, size_t asize, int heapExtended)
 {
     size_t csize = GET_SIZE(HDRP(bp)); //Gets the current block size
-    fill_block(bp);
-    if ((csize - asize) >= (2*DSIZE)) {
-        PUT(HDRP(bp), PACK(asize, 1));
-        PUT(FTRP(bp), PACK(asize, 1));
-        bp = NEXT_BLKP(bp);
-        PUT(HDRP(bp), PACK(csize-asize, 0));
-        PUT(FTRP(bp), PACK(csize-asize, 0));
-        add_to_list(bp);
+
+    if (heapExtended == 1) {                       //when heap is extended
+        /*if current block size is greater than the asize, splicing takes place */
+        if ((csize - asize) >= (2 * DSIZE)) {
+            PUT(HDRP(bp), PACK(asize, 1));
+            PUT(FTRP(bp), PACK(asize, 1));
+            /*splice block*/
+            bp = NEXT_BLKP(bp);
+            PUT(HDRP(bp), PACK(csize - asize, 0));
+            PUT(FTRP(bp), PACK(csize - asize, 0));
+            add_to_list(bp); //Put the newly spliced free block at front of the free list
+        } else {                    /*else no splicing, getting the whole block*/
+            PUT(HDRP(bp), PACK(csize, 1));
+            PUT(FTRP(bp), PACK(csize, 1));
+        }
     }
     else {
-        PUT(HDRP(bp), PACK(csize, 1));
-        PUT(FTRP(bp), PACK(csize, 1));
+        /*if current block size is greater than the asize, splicing takes place */
+        if ((csize - asize) >= (2 * DSIZE)) {
+            fill_block(bp); //removes the recently filled block from free list
+            PUT(HDRP(bp), PACK(asize, 1));
+            PUT(FTRP(bp), PACK(asize, 1));
+            /*splice block*/
+            bp = NEXT_BLKP(bp);
+            PUT(HDRP(bp), PACK(csize - asize, 0));
+            PUT(FTRP(bp), PACK(csize - asize, 0));
+            add_to_list(bp); //Put the newly spliced free block at front of the free list
+        } else {
+            /*else no splicing necessary, they are getting the whole block*/
+            PUT(HDRP(bp), PACK(csize, 1));
+            PUT(FTRP(bp), PACK(csize, 1));
+            fill_block(bp); //removes the recently filled block from free list
+        }
     }
-    return bp;
-//     if (heapExtended == 1) {                       //when heap is extended
-//         /*if current block size is greater than the asize, splicing takes place */
-//         if ((csize - asize) >= (2 * DSIZE)) {
-//             PUT(HDRP(bp), PACK(asize, 1));
-//             PUT(FTRP(bp), PACK(asize, 1));
-//             /*splice block*/
-//             bp = NEXT_BLKP(bp);
-//             PUT(HDRP(bp), PACK(csize - asize, 0));
-//             PUT(FTRP(bp), PACK(csize - asize, 0));
-//             add_to_list(bp); //Put the newly spliced free block at front of the free list
-//         } else {                    /*else no splicing, getting the whole block*/
-//             PUT(HDRP(bp), PACK(csize, 1));
-//             PUT(FTRP(bp), PACK(csize, 1));
-//         }
-//     }
-//     else {
-//         /*if current block size is greater than the asize, splicing takes place */
-//         if ((csize - asize) >= (2 * DSIZE)) {
-//             fill_block(bp); //removes the recently filled block from free list
-//             PUT(HDRP(bp), PACK(asize, 1));
-//             PUT(FTRP(bp), PACK(asize, 1));
-//             /*splice block*/
-//             bp = NEXT_BLKP(bp);
-//             PUT(HDRP(bp), PACK(csize - asize, 0));
-//             PUT(FTRP(bp), PACK(csize - asize, 0));
-//             add_to_list(bp); //Put the newly spliced free block at front of the free list
-//         } else {
-//             /*else no splicing necessary, they are getting the whole block*/
-//             PUT(HDRP(bp), PACK(csize, 1));
-//             PUT(FTRP(bp), PACK(csize, 1));
-//             fill_block(bp); //removes the recently filled block from free list
-//         }
-//     }
 }
 
 /* Adopted the best fit policy for finding a free block */
