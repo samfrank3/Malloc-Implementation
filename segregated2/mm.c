@@ -83,10 +83,6 @@ team_t team = {
 #define SEG_SET_NEXT(bp, next_block_ptr) PUT(bp, next_block_ptr)
 #define SEG_SET_PREV(bp, prev_block_ptr) PUT(GET_PREV(bp), prev_block_ptr)
 
-/*SET AND GET REALLOC BIT*/
-#define GET_RALLOC(p) (GET(p) & 0x2)
-#define SET_RALLOC(p) (GET(p) | 0x2)
-
 /* Global variables: */
 static char *heap_listp; /* Pointer to first block */
 
@@ -419,7 +415,8 @@ int mm_init(void){
     int i;
     for (i = 0; i < num_buckets; i++)
         seg_p[i] = NULL;
-
+ 
+    add_to_list(heap_listp);
     return 0;
 }
 
