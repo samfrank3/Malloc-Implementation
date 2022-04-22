@@ -94,10 +94,6 @@ static char *heap_listp; /* Pointer to first block */
 size_t num_buckets = 20;
 static char** seg_p;
 
-
-
-
-
 /* Give an index of the list from an array based on power of 2*/
 static int get_index(size_t size){
     if(size > 32768){
@@ -474,7 +470,7 @@ void mm_free(void *bp){
     size = GET_SIZE(HDRP(bp));
     PUT(HDRP(bp), PACK(size, 0));
     PUT(FTRP(bp), PACK(size, 0));
-    add_to_list(bp);
+    //add_to_list(bp);
     coalesce(bp);
 }
 
