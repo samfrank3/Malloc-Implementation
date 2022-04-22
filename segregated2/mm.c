@@ -348,7 +348,7 @@ static void place(void *bp, size_t asize, int heapExtended)
 
 /* Adopted the best fit policy for finding a free block */
 static void *segregated_best_fit(size_t asize){
-    size_t min = 9999999; //different between the sizes, init really large
+    size_t min = (size_t) NULL; //different between the sizes, init really large
     void *bestfit = NULL; //pointer for best fit block
         
     /* Searching segregated lists whose block size is greater than or equal to the asize */
@@ -361,7 +361,7 @@ static void *segregated_best_fit(size_t asize){
                 if (!GET_ALLOC(HDRP(bp)) && (asize <= csize)) {
                     size_t diff = csize;
                     /*finds best fit from the list by finding the minimum difference*/
-                    if (diff < min) {
+                    if (diff < min || min == (size_t) NULL) {
                         min = diff;
                         bestfit = bp;
                     }
