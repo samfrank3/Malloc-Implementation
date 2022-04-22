@@ -457,6 +457,7 @@ void mm_free(void *bp){
     size = GET_SIZE(HDRP(bp));
     PUT(HDRP(bp), PACK(size, 0));
     PUT(FTRP(bp), PACK(size, 0));
+    add_to_list(bp);
     coalesce(bp);
 }
 
