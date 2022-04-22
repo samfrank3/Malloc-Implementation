@@ -412,11 +412,8 @@ int mm_init(void){
     PUT(heap_listp + (3 * WSIZE), PACK(0, 1));     /* Epilogue header */
     heap_listp += (2 * WSIZE);
     /* Initializes the the segregated list to NULL*/
-    int i;
-    for (i = 0; i < num_buckets; i++)
+    for (int i = 0; i < num_buckets; i++)
         seg_p[i] = NULL;
- 
-    add_to_list(heap_listp);
     return 0;
 }
 
