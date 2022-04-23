@@ -332,7 +332,7 @@ static void *find_fit(size_t asize, int index)
         while(bp){
             size_t csize = GET_SIZE(HDRP(bp));
             if(csize >= asize){
-                if(csize = asize){
+                if(csize == asize){
                     return bp;
                 }else if(csize < min){
                     min = csize;
