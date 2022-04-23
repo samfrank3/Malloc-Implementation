@@ -101,42 +101,40 @@ static char** seg_p;
 /* Give an index of the list from an array based on power of 2*/
 static int get_index(size_t size){
     if(size > 32768){
-        return 18;
-    }else if(size > 16384){
         return 17;
-    }else if(size > 8192){
+    }else if(size > 16384){
         return 16;
-    }else if(size > 4096){
+    }else if(size > 8192){
         return 15;
-    }else if(size > 2048){
+    }else if(size > 4096){
         return 14;
-    }else if(size > 1024){
+    }else if(size > 2048){
         return 13;
-    }else if(size > 512){
+    }else if(size > 1024){
         return 12;
-    }else if(size > 256){
+    }else if(size > 512){
         return 11;
-    }else if(size > 128){
+    }else if(size > 256){
         return 10;
-    }else if(size > 120){
+    }else if(size > 128){
         return 9;
+    }else if(size > 120){
+        return 8;
     }else if(size > 104){
-         return 8;
-    }else if(size > 88){
          return 7;
+    }else if(size > 88){
+         return 6;
     }else if(size > 72){
-        return 6;
-    }else if(size > 64){//5-8
         return 5;
-    }else if(size > 32){//4
+    }else if(size > 64){//5-8
         return 4;
-    }else if(size > 24){//3
+    }else if(size > 32){//4
         return 3;
-    }else if(size > 16){ //2
+    }else if(size > 24){//3
         return 2;
-    }else if(size > 8){//1 block
+    }else if(size > 16){ //2
         return 1;
-    }else{
+    }else{//1 block
         return 0;
     }
 //         if (size > 16384) //based off of 2^14
