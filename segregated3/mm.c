@@ -75,6 +75,8 @@ team_t team = {
 
 #define GET_NEXT(p)  ((char *)(p))
 #define GET_PREV(p)  ((char *)(p + WSIZE))
+#define GET_NEXT_ADDRESS(p) (*(char **)(ptr))
+#define GET_PREV_ADDRESS(p)  (*(char **)(GET_PREV(p)))
 
 /* GET SEGREGATED LIST NEXT AND PREV BLOCKS */
 #define SEG_GET_NEXT(bp) GET(GET_NEXT(bp))
@@ -152,13 +154,49 @@ static void add_to_free_list(void *new)
 //        SEG_SET_PREV(new, (size_t) NULL);
 //    }
     
-    void *next = head;
+//     void *next = NULL;
+//     while ((head != NULL) && (size > GET_SIZE(HDRP(head)))) {
+//         next = head;
+//         head = GET_PREV_ADDRESS(head); //(*(char **)(ptr))
+//     }
+    //#define SET_PTR(p, ptr) (*(unsigned int *)(p) = (unsigned int)(ptr))
+    //SET_PTR = PUT()
+    //
+//     if (head != NULL) {
+//         if (insert_ptr != NULL) {
+// //             SET_PTR(PRED_PTR(ptr), search_ptr);//PUT(GET_PREV(new), head)
+//             PUT(GET_PREV(new), head);
+// //             SET_PTR(SUCC_PTR(search_ptr), ptr);//PUT(GET_NEXT(head), ptr);
+//             PUT(GET_NEXT(head), new);
+// //             SET_PTR(SUCC_PTR(ptr), insert_ptr);
+//             PUT(GET_NEXT(new), next);
+// //             SET_PTR(PRED_PTR(insert_ptr), ptr);
+//             PUT(GET_PREV(next), new);
+//         } else {
+// //             SET_PTR(PRED_PTR(ptr), search_ptr);
+//             PUT(GET_PREV(new), head);
+// //             SET_PTR(SUCC_PTR(search_ptr), ptr);
+//             PUT(GET_NEXT(head), new);
+// //             SET_PTR(SUCC_PTR(ptr), NULL);
+//             PUT(GET_NEXT(new), NULL);
+//             segregated_free_lists[list] = ptr; //idk how to do this
+//         }
+//     } else {
+//         if (insert_ptr != NULL) {
+//             SET_PTR(PRED_PTR(ptr), NULL);
+//             SET_PTR(SUCC_PTR(ptr), insert_ptr);
+//             SET_PTR(PRED_PTR(insert_ptr), ptr);
+//         } else {
+//             SET_PTR(PRED_PTR(ptr), NULL);
+//             SET_PTR(SUCC_PTR(ptr), NULL);
+//             segregated_free_lists[list] = ptr;
+//         }
+//     }
     
     
     while(SEG_GET_NEXT(next)){
         next = (void *)SEG_GET_NEXT(next);
         if((size_t)next >= (size_t)new){
-
             void *tmp = next;
             next = (void *)SEG_GET_PREV(next);
             PUT(GET_NEXT(next), (size_t) new);
@@ -341,8 +379,7 @@ static void *find_fit(size_t asize, int index)
 /*
  * mm_init - initialize the malloc package.
  */
-int mm_init(void)
-{
+int mm_init(void){
 
     if((heap_listp = mem_sbrk((num_buckets + 3) * WSIZE)) == (void *)-1)
         
@@ -447,13 +484,13 @@ void *mm_realloc(void *ptr, size_t size)
     size_t next_alloc =  GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
     size_t next_size = GET_SIZE(HDRP(NEXT_BLKP(ptr)));
     void *next = NEXT_BLKP(ptr);
-    size_t total_size = old_size;
+//     size_t total_size = old_size;
 
     if(prev_alloc && !next_alloc && (old_size + next_size >= align_size)){
-        total_size += next_size;
+//         total_size += next_size;
         fill_block(next);
-        PUT(HDRP(ptr), PACK(total_size, 1));
-        PUT(FTRP(ptr), PACK(total_size, 1));
+        PUT(HDRP(ptr), PACK((old_size + next_size), 1));
+        PUT(FTRP(ptr), PACK((old_size + next_size), 1));
         place(ptr, total_size);
     }
     else if(!next_size && align_size >= old_size){
@@ -461,8 +498,8 @@ void *mm_realloc(void *ptr, size_t size)
         if((mem_sbrk(extend_size)) == (void*)-1)
             return NULL;
         
-        PUT(HDRP(ptr), PACK(total_size + extend_size, 1));
-        PUT(FTRP(ptr), PACK(total_size + extend_size, 1));
+        PUT(HDRP(ptr), PACK(old_size + extend_size, 1));
+        PUT(FTRP(ptr), PACK(old_size + extend_size, 1));
         PUT(HDRP(NEXT_BLKP(ptr)), PACK(0, 1));
         place(ptr, align_size);
     }
