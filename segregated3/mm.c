@@ -193,7 +193,7 @@ static void add_to_free_list(void *new)
 //         }
 //     }
     
-    
+    void *next = head; 
     while(SEG_GET_NEXT(next)){
         next = (void *)SEG_GET_NEXT(next);
         if((size_t)next >= (size_t)new){
