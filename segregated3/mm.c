@@ -98,8 +98,6 @@ static char *seg_p;
 
 /* Give an index of the list from an array based on power of 2*/
 static int get_index(size_t size){
-    
-    
     if(size > 262144){//2^18
         return 14;
     }else if(size > 131072){//2^17
@@ -151,27 +149,24 @@ static void add_to_free_list(void *new)
 //        SEG_SET_NEXT(new, (size_t) NULL);
 //        SEG_SET_PREV(new, (size_t) NULL);
 //    }
-    
+
     void *next = head;
-    
-    
-    while(SEG_GET_NEXT(next)){
+    while(SEG_GET_NEXT(next) != (size_t) NULL){
         next = (void *)SEG_GET_NEXT(next);
         if((size_t)next >= (size_t)new){
-
-            void *tmp = next;
+            void *holder = next;
             next = (void *)SEG_GET_PREV(next);
-            PUT(GET_NEXT(next), (size_t) new);
-            PUT(GET_PREV(new), (size_t) next);
-            PUT(GET_NEXT(new), (size_t) tmp);
-            PUT(GET_PREV(tmp), (size_t) new);
+            SEG_SET_NEXT(next, (size_t) new);
+            SEG_SET_PREV(new, (size_t) next);
+            SEG_SET_NEXT(new, (size_t) holder);
+            SEG_SET_PREV(holder, (size_t)new);
             return;
         }
     }
 
-    PUT(GET_NEXT(next), (size_t) new);
-    PUT(GET_PREV(new), (size_t) next);
-    PUT(GET_NEXT(new), (size_t) NULL);
+    SEG_SET_NEXT(next, (size_t) new);
+    SEG_SET_PREV(new, (size_t) next);
+    SEG_SET_NEXT(new, (size_t) NULL);
     
 }
 
@@ -210,10 +205,8 @@ static void *coalesce(void * bp)
     }else if(!prev_alloc && next_alloc) {
         size += GET_SIZE(HDRP(PREV_BLKP(bp)));
         fill_block(PREV_BLKP(bp));
-
         PUT(FTRP(bp), PACK(size, 0));
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
-
         bp = PREV_BLKP(bp);
         PUT(GET_PREV(bp), (size_t) NULL);
         PUT(GET_NEXT(bp), (size_t) NULL);
@@ -233,16 +226,16 @@ static void *coalesce(void * bp)
 
 
 /* Extends the heap with a free block and returns the pointer of that free block*/
-static void *extend_heap(size_t asize)
+static void *extend_heap(size_t words)
 {
     void *bp;
-
-    if((bp = mem_sbrk(asize)) == (void*)-1){
+//    size_t size = (words % 2) ? (words + 1) * WSIZE : words*WSIZE; drops performance
+    if((bp = mem_sbrk(words)) == (void*)-1){
         return NULL;
     }
     
-    PUT(HDRP(bp), PACK(asize, 0));
-    PUT(FTRP(bp), PACK(asize, 0));
+    PUT(HDRP(bp), PACK(words, 0));
+    PUT(FTRP(bp), PACK(words, 0));
     PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1));
    
     return coalesce(bp);
@@ -270,23 +263,20 @@ static void *place(char *bp, size_t asize)
             PUT(FTRP(bp), PACK(asize, 1));
             PUT(HDRP(NEXT_BLKP(bp)), PACK((csize-asize), 0));
             PUT(FTRP(NEXT_BLKP(bp)), PACK((csize-asize), 0));
-
             coalesce(NEXT_BLKP(bp));
         }
     }
     else{
         PUT(HDRP(bp), PACK(csize, 1));
         PUT(FTRP(bp), PACK(csize, 1));
-
-        
     }
     return bp;
 }
 
 /* Adopted the best fit policy for finding a free block */
-static void *find_fit(size_t asize, int index)
+static void *find_best_fit(size_t asize, int index)
 {
-    size_t min = (size_t) 9999999;
+    size_t min = (size_t) NULL;
     void *bestfit = NULL;
     while(index < num_buckets){
         void *head  = seg_p + index * WSIZE;
@@ -294,7 +284,12 @@ static void *find_fit(size_t asize, int index)
         while(bp){
             size_t csize = GET_SIZE(HDRP(bp));
             if(csize >= asize){
-                if(csize < min){
+                if(min == (size_t) NULL){
+                    min = csize;
+                    bestfit = bp;
+                }else if(csize == asize){
+                    return bp;
+                }else if(csize < min){
                     min = csize;
                     bestfit = bp;
                 }
@@ -344,13 +339,14 @@ static void *find_fit(size_t asize, int index)
 int mm_init(void)
 {
 
-    if((heap_listp = mem_sbrk((num_buckets + 3) * WSIZE)) == (void *)-1)
-        
+    if((heap_listp = mem_sbrk((num_buckets + 3) * WSIZE)) == (void *)-1){
         return -1;
+    }
+    
     int i;
-
-    for(i = 0; i < num_buckets; ++i)
+    for(i = 0; i < num_buckets; ++i){
         PUT(heap_listp + i*WSIZE, (size_t)NULL);
+    }
 
     
     PUT(heap_listp + (i+0)*WSIZE, PACK(DSIZE, 1));
@@ -360,7 +356,6 @@ int mm_init(void)
     seg_p = heap_listp;
     heap_listp += (i+1)*WSIZE;
 
-    
     if(extend_heap(1<<6) == NULL) //half the further extensionsons of the heap (11/2) rounded up to 6
         return -1;
     return 0;
@@ -385,11 +380,10 @@ void *mm_malloc(size_t size)
     size_t extendsize;
     void *bp;
 
-    if((bp = find_fit(align_size, get_index(align_size))) != NULL)
+    if((bp = find_best_fit(align_size, get_index(align_size))) != NULL)
         return place(bp, align_size);
 
     extendsize = MAX(align_size, CHUNKSIZE);
-    
     if((bp = extend_heap(extendsize)) == NULL)
         return NULL;
 
@@ -447,22 +441,20 @@ void *mm_realloc(void *ptr, size_t size)
     size_t next_alloc =  GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
     size_t next_size = GET_SIZE(HDRP(NEXT_BLKP(ptr)));
     void *next = NEXT_BLKP(ptr);
-    size_t total_size = old_size;
 
     if(prev_alloc && !next_alloc && (old_size + next_size >= align_size)){
-        total_size += next_size;
         fill_block(next);
-        PUT(HDRP(ptr), PACK(total_size, 1));
-        PUT(FTRP(ptr), PACK(total_size, 1));
-        place(ptr, total_size);
+        PUT(HDRP(ptr), PACK((old_size + next_size), 1));
+        PUT(FTRP(ptr), PACK((old_size + next_size), 1));
+        place(ptr, (old_size + next_size));
     }
     else if(!next_size && align_size >= old_size){
         size_t extend_size = align_size - old_size;
         if((mem_sbrk(extend_size)) == (void*)-1)
             return NULL;
         
-        PUT(HDRP(ptr), PACK(total_size + extend_size, 1));
-        PUT(FTRP(ptr), PACK(total_size + extend_size, 1));
+        PUT(HDRP(ptr), PACK(old_size + extend_size, 1));
+        PUT(FTRP(ptr), PACK(old_size + extend_size, 1));
         PUT(HDRP(NEXT_BLKP(ptr)), PACK(0, 1));
         place(ptr, align_size);
     }
