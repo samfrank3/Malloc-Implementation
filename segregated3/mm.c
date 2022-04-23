@@ -448,6 +448,58 @@ void mm_free(void *ptr)
     coalesce(bp);
 }
 
+
+static void *realloc_coalesce(void *bp,size_t newSize,int *isNextFree)
+{
+    size_t  prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
+    size_t  next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
+    size_t size = GET_SIZE(HDRP(bp));
+    *isNextFree = 0;
+    /*coalesce the block and change the point*/
+    if(prev_alloc && !next_alloc)
+    {
+        size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
+        if(size>=newSize)
+        {
+            delete_node(NEXT_BLKP(bp));
+            PUT(HDRP(bp), PACK(size,1));
+            PUT(FTRP(bp), PACK(size,1));
+            *isNextFree = 1;
+        }
+    }
+    else if(!prev_alloc && next_alloc)
+    {
+        size += GET_SIZE(HDRP(PREV_BLKP(bp)));
+        if(size>=newSize)
+        {
+            delete_node(PREV_BLKP(bp));
+            PUT(FTRP(bp),PACK(size,1));
+            PUT(HDRP(PREV_BLKP(bp)),PACK(size,1));
+            bp = PREV_BLKP(bp);
+        }
+    }
+    else if(!prev_alloc && !next_alloc)
+    {
+        size +=GET_SIZE(FTRP(NEXT_BLKP(bp)))+ GET_SIZE(HDRP(PREV_BLKP(bp)));
+        if(size>=newSize)
+        {
+            delete_node(PREV_BLKP(bp));
+            delete_node(NEXT_BLKP(bp));
+            PUT(FTRP(NEXT_BLKP(bp)),PACK(size,1));
+            PUT(HDRP(PREV_BLKP(bp)),PACK(size,1));
+            bp = PREV_BLKP(bp);
+        }
+    }
+    return bp;
+}
+static void realloc_place(void *bp,size_t asize)
+{
+    size_t csize = GET_SIZE(HDRP(bp));
+    PUT(HDRP(bp),PACK(csize,1));
+    PUT(FTRP(bp),PACK(csize,1));
+}
+
+
 /*
  * Requires:
  *   "ptr" is either the address of an 1 block or NULL.
@@ -478,36 +530,57 @@ void *mm_realloc(void *ptr, size_t size)
     }else{
         align_size = 2*DSIZE;
     }
-    if(old_size < align_size){
-        int isNextAlloc = 1;
-        size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(ptr)));
-        size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
-        size_t size = GET_SIZE(HDRP(ptr));
-        if(prev_alloc && !next_alloc){
-           size += GET_SIZE(HDRP(NEXT_BLKP(ptr)));
-            if(size >= align_size){
-                isNextAlloc = 0;
-            }
-        }
-        void *bp = coalesce(ptr);
-        if(isNextAlloc == 0){
-           PUT(HDRP(bp),PACK(old_size, 1));
-           PUT(FTRP(bp),PACK(old_size, 1));
-        }else if(isNextAlloc == 0 && ptr != bp){
-            memcpy(bp,ptr,size);
-            PUT(HDRP(bp),PACK(GET_SIZE(HDRP(bp)), 1));
-            PUT(FTRP(bp),PACK(GET_SIZE(HDRP(bp)), 1));
+    if(old_size == align_size){
+        return ptr; 
+    }else if(old_size < align_size){
+        int isFree;
+        void *bp = realloc_coalesce(ptr,asize,&isFree);
+        if(isFree==1){ /*next block is free*/
+            realloc_place(bp,asize);
+        } else if(isnextFree ==0 && bp != ptr){ /*previous block is free, move the point to new address,and move the payload*/
+            memcpy(bp, ptr, size);
+            realloc_place(bp,asize);
         }else{
-            new_ptr = mm_malloc(size);
-            memcpy(new_ptr, ptr, size);
+        /*realloc_coalesce is fail*/
+            newptr = mm_malloc(size);
+            memcpy(newptr, ptr, size);
             mm_free(ptr);
-            return new_ptr;
+            return newptr;
         }
         return bp;
     }else{
-        PUT(HDRP(bp),PACK(GET_SIZE(HDRP(ptr)), 1));
-        PUT(FTRP(bp),PACK(GET_SIZE(HDRP(ptr)), 1));
+        realloc_place(ptr,asize);
         return ptr;
+    }
+//         int isNextAlloc = 1;
+//         size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(ptr)));
+//         size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
+//         size_t size = GET_SIZE(HDRP(ptr));
+//         if(prev_alloc && !next_alloc){
+//            size += GET_SIZE(HDRP(NEXT_BLKP(ptr)));
+//             if(size >= align_size){
+//                 isNextAlloc = 0;
+//             }
+//         }
+//         void *bp = coalesce(ptr);
+//         if(isNextAlloc == 0){
+//            PUT(HDRP(bp),PACK(old_size, 1));
+//            PUT(FTRP(bp),PACK(old_size, 1));
+//         }else if(isNextAlloc == 0 && ptr != bp){
+//             memcpy(bp,ptr,size);
+//             PUT(HDRP(bp),PACK(GET_SIZE(HDRP(bp)), 1));
+//             PUT(FTRP(bp),PACK(GET_SIZE(HDRP(bp)), 1));
+//         }else{
+//             new_ptr = mm_malloc(size);
+//             memcpy(new_ptr, ptr, size);
+//             mm_free(ptr);
+//             return new_ptr;
+//         }
+//         return bp;
+    }else{
+//         PUT(HDRP(bp),PACK(GET_SIZE(HDRP(ptr)), 1));
+//         PUT(FTRP(bp),PACK(GET_SIZE(HDRP(ptr)), 1));
+//         return ptr;
     }
  
     return ptr;
