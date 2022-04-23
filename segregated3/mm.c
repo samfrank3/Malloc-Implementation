@@ -47,7 +47,7 @@ team_t team = {
 /* Basic constants and macros */
 #define WSIZE      4 /* Word and header/footer size (bytes) */
 #define DSIZE      (2 * WSIZE)    /* Doubleword size (bytes), also works for the overhead of the header and footer cuz its a byte */
-#define CHUNKSIZE  (1<<9)      /* Initial heap size (bytes) */
+#define CHUNKSIZE  (1<<12)      /* Initial heap size (bytes) */
 
 #define MAX(x, y)  ((x) > (y) ? (x) : (y))
 #define MIN(x, y)  ((x) < (y) ? (x) : (y))
@@ -193,7 +193,7 @@ static void add_to_free_list(void *new)
 //         }
 //     }
     
-    void *next = head; 
+    void *next = head;
     while(SEG_GET_NEXT(next)){
         next = (void *)SEG_GET_NEXT(next);
         if((size_t)next >= (size_t)new){
@@ -474,7 +474,7 @@ void *mm_realloc(void *ptr, size_t size)
     }
     void *new_ptr;
     size_t old_size = GET_SIZE(HDRP(ptr));
-    size_t align_size; 
+    size_t align_size;
     if(size > DSIZE){
         align_size = DSIZE * ((size + DSIZE + (DSIZE - 1))/DSIZE);
     }else{
@@ -496,8 +496,8 @@ void *mm_realloc(void *ptr, size_t size)
             fill_block(NEXT_BLKP(ptr));
             
             // Do not split block
-            PUT(HDRP(ptr), PACK(new_size + remainder, 1)); 
-            PUT(FTRP(ptr), PACK(new_size + remainder, 1)); 
+            PUT(HDRP(ptr), PACK(new_size + remainder, 1));
+            PUT(FTRP(ptr), PACK(new_size + remainder, 1));
         } else {
             new_ptr = mm_malloc(new_size - DSIZE);
             memcpy(new_ptr, ptr, MIN(size, new_size));
@@ -505,7 +505,7 @@ void *mm_realloc(void *ptr, size_t size)
         }
     }
     
-    // Return the reallocated block 
+    // Return the reallocated block
     return new_ptr;
 }
     
@@ -594,7 +594,7 @@ void *mm_realloc(void *ptr, size_t size)
 //     if(old_size == align_size){
 //         return ptr;
 //     }
-//     size_t blocks = old_size - align_size; 
+//     size_t blocks = old_size - align_size;
 //     if(blocks < 0){
 //         if (!GET_ALLOC(HDRP(NEXT_BLKP(ptr))) || !GET_SIZE(HDRP(NEXT_BLKP(ptr)))) {
 //             size_t remainder = GET_SIZE(HDRP(ptr)) + GET_SIZE(HDRP(NEXT_BLKP(ptr))) - align_size;
@@ -608,8 +608,8 @@ void *mm_realloc(void *ptr, size_t size)
 //             fill_block(NEXT_BLKP(ptr));
             
 //             // Do not split block
-//             PUT(HDRP(ptr), PACK(align_size + remainder, 1)); 
-//             PUT(FTRP(ptr), PACK(align_size + remainder, 1)); 
+//             PUT(HDRP(ptr), PACK(align_size + remainder, 1));
+//             PUT(FTRP(ptr), PACK(align_size + remainder, 1));
 //         } else {
 //             new_ptr = mm_malloc(align_size - DSIZE);
 //             memcpy(new_ptr, ptr, MIN(size, align_size));
@@ -617,11 +617,11 @@ void *mm_realloc(void *ptr, size_t size)
 //         }
 //         blocks = GET_SIZE(HDRP(new_ptr)) - align_size;
 //     }
-//     // Tag the next block if block overhead drops below twice the overhead 
+//     // Tag the next block if block overhead drops below twice the overhead
 // //     if (block_buffer < 2 * REALLOC_BUFFER)
 // //         SET_RATAG(HDRP(NEXT_BLKP(new_ptr)));
     
-//     // Return the reallocated block 
+//     // Return the reallocated block
 //     return new_ptr;
     
 //     size_t prev_alloc =  GET_ALLOC(FTRP(PREV_BLKP(ptr)));
